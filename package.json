@@ -1,7 +1,7 @@
 {
   "name": "mcp-arabic-ms-word",
-  "version": "1.0.1",
-  "description": "High-precision Arabic Microsoft Word MCP server for docx creation, inspection, RTL styling, XML injection, and template processing",
+  "version": "1.1.0",
+  "description": "High-precision Arabic Microsoft Word MCP server for docx creation, inspection, RTL styling, text repair, XML decompression & surgery, and template processing",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
@@ -32,7 +32,9 @@
     "docx",
     "rtl",
     "typography",
-    "xml-injection",
+    "text-repair",
+    "xml-decompression",
+    "xml-surgery",
     "docxtemplater"
   ],
   "author": "MarwanDevSpace",

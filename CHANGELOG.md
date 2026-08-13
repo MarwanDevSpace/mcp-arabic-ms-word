@@ -4,6 +4,15 @@ All notable changes to **mcp-arabic-ms-word** will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-08-13
+
+### Added
+- New Master Agent Persona Guide: [`WORD_MASTER_AGENT.md`](WORD_MASTER_AGENT.md) unifying all tools, skills, and execution protocols.
+- New Tool: `repair_arabic_text_formatting` for fixing inverted parentheses/brackets, digit standardization (Eastern/Western), whitespace trimming, tatweel/kashida stripping, and Alef/Yeh normalizations.
+- New Tool: `decompress_and_modify_word_xml` for decompressing `.docx` archives and performing deep regex/pattern replacements inside `word/document.xml`, `word/styles.xml`, `word/numbering.xml`, and `word/settings.xml`.
+- New Skill: [arabic-text-repair](.agents/skills/arabic-text-repair/SKILL.md).
+- New Skill: [docx-xml-surgeon](.agents/skills/docx-xml-surgeon/SKILL.md).
+
 ## [1.0.1] - 2026-08-13
 
 ### Updated

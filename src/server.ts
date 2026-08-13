@@ -21,6 +21,8 @@ import { modifyXmlElementSchema, handleModifyXmlElement } from './tools/modify_x
 import { injectTemplateSchema, handleInjectTemplate } from './tools/inject_template.js';
 import { convertToMarkdownSchema, handleConvertToMarkdown } from './tools/convert_to_markdown.js';
 import { resolveIntentSchema, handleResolveIntent } from './tools/resolve_intent.js';
+import { repairTextSchema, handleRepairText } from './tools/repair_text.js';
+import { decompressXmlSchema, handleDecompressXml } from './tools/decompress_xml.js';
 
 import { getResources } from './resources/index.js';
 import { getPrompts } from './prompts/index.js';
@@ -247,6 +249,40 @@ export function createWordMcpServer(): Server {
         required: ['prompt'],
       },
     },
+    {
+      name: 'repair_arabic_text_formatting',
+      title: 'Repair Arabic Text Formatting & Punctuation',
+      description: 'Automatically detects and fixes Arabic typography defects: normalizes Alef/Yeh forms, standardizes digits (Eastern/Western), fixes inverted brackets/parentheses in RTL, trims whitespace, and strips tatweel/kashida.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          text: { type: 'string', description: 'Arabic text string to inspect and repair' },
+          normalizeAlef: { type: 'boolean', default: false, description: 'Normalize Alef forms (أ, إ, آ -> ا)' },
+          normalizeYeh: { type: 'boolean', default: false, description: 'Normalize Dotless Yeh (ى -> ي)' },
+          standardizeDigits: { type: 'string', enum: ['eastern', 'western', 'none'], default: 'none', description: 'Standardize digits' },
+          fixInvertedPunctuation: { type: 'boolean', default: true, description: 'Fix inverted parentheses/punctuation' },
+          trimExtraSpaces: { type: 'boolean', default: true, description: 'Trim extra whitespace' },
+          removeKashida: { type: 'boolean', default: false, description: 'Remove tatweel/kashida' },
+        },
+        required: ['text'],
+      },
+    },
+    {
+      name: 'decompress_and_modify_word_xml',
+      title: 'Decompress & Modify WordprocessingML XML',
+      description: 'Decompresses .docx archives to inspect and modify any inner XML structure (word/document.xml, word/styles.xml, word/numbering.xml, word/settings.xml) via regex/pattern replacement.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          filePath: { type: 'string', description: 'Path to .docx archive file' },
+          targetXmlPath: { type: 'string', default: 'word/document.xml', description: 'Inner XML file path inside docx zip' },
+          searchPattern: { type: 'string', description: 'Regex pattern or string to search inside target XML' },
+          replacementValue: { type: 'string', description: 'Replacement string or XML payload to inject' },
+          outputPath: { type: 'string', description: 'Optional output .docx path' },
+        },
+        required: ['filePath', 'searchPattern', 'replacementValue'],
+      },
+    },
   ];
 
   // Tool Handlers
@@ -292,6 +328,12 @@ export function createWordMcpServer(): Server {
         break;
       case 'resolve_and_execute_document_intent':
         result = await handleResolveIntent(args as any);
+        break;
+      case 'repair_arabic_text_formatting':
+        result = await handleRepairText(args as any);
+        break;
+      case 'decompress_and_modify_word_xml':
+        result = await handleDecompressXml(args as any);
         break;
       default:
         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);

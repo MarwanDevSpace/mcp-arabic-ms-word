@@ -217,4 +217,49 @@ export class ArabicXmlEngine {
 
     return outPath;
   }
+
+  public async decompressAndModifyXmlFile(
+    filePath: string,
+    targetXmlPath: string = 'word/document.xml',
+    searchPattern: string,
+    replacementValue: string,
+    outputPath?: string
+  ): Promise<{ outputPath: string; modifiedXmlPath: string; matchCount: number }> {
+    if (!fs.existsSync(filePath)) {
+      throw new FileOperationError(`File not found: '${filePath}'`);
+    }
+
+    const fileBuffer = fs.readFileSync(filePath);
+    const zip = await JSZip.loadAsync(fileBuffer);
+    const targetFile = zip.file(targetXmlPath);
+
+    if (!targetFile) {
+      const availableFiles = Object.keys(zip.files).join(', ');
+      throw new XmlManipulationError(
+        `File '${targetXmlPath}' not found in docx archive. Available files: ${availableFiles}`
+      );
+    }
+
+    let xmlContent = await targetFile.async('text');
+    const regex = new RegExp(searchPattern, 'g');
+    const matches = xmlContent.match(regex);
+    const matchCount = matches ? matches.length : 0;
+
+    if (matchCount === 0) {
+      throw new XmlManipulationError(`Pattern '${searchPattern}' not found inside '${targetXmlPath}'`);
+    }
+
+    xmlContent = xmlContent.replace(regex, replacementValue);
+    zip.file(targetXmlPath, xmlContent);
+
+    const outPath = outputPath || filePath;
+    const newBuffer = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
+    fs.writeFileSync(outPath, newBuffer);
+
+    return {
+      outputPath: outPath,
+      modifiedXmlPath: targetXmlPath,
+      matchCount,
+    };
+  }
 }

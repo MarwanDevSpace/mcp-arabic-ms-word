@@ -8,7 +8,7 @@
 [![MCP Protocol](https://img.shields.io/badge/MCP-Protocol--v1.0-purple.svg)](https://modelcontextprotocol.io)
 [![Author](https://img.shields.io/badge/Author-MarwanDevSpace-orange.svg)](https://github.com/MarwanDevSpace)
 
-**خادم بروتوكول MCP المتخصص في إنشاء وتنسيق وحقن وفحص مستندات Microsoft Word بدعم كامل ودقيق للغة العربية والاتجاه من اليمين إلى اليسار (RTL).**
+**خادم بروتوكول MCP المتقدم (WordMasterAgent) المتخصص في إنشاء وتنسيق وحقن وفحص وإصلاح نصوص وتفكيك شفرات XML لمستندات Microsoft Word بدعم كامل ودقيق للغة العربية والاتجاه من اليمين إلى اليسار (RTL).**
 
 </div>
 
@@ -18,7 +18,7 @@
 
 - [العربية (Arabic)](#-العربية)
   - [المميزات الرئيسية](#-المميزات-الرئيسية)
-  - [فهرس الأدوات المتاحة (Tools)](#-فهرس-الأدوات-المتاحة-tools)
+  - [فهرس الأدوات المتاحة (13 Tool)](#-فهرس-الأدوات-المتاحة-13-tools)
   - [طريقة التركيب والتشغيل عبر npx](#-طريقة-التركيب-والتشغيل-عبر-npx)
   - [إعدادات العميل (mcp_config.json)](#-إعدادات-العميل-mcp_configjson)
 - [English Section](#-english-version)
@@ -32,30 +32,26 @@
 
 ### 🚀 المميزات الرئيسية
 
-1. **دعم كامل للتيبوغرافيا والخطوط العربية (RTL)**:
+1. **دعم كامل للتيبوغرافيا وإصلاح النصوص العربية (RTL & Text Repair)**:
    - اتجاه الكتابة من اليمين إلى اليسار (`bidi` / `rtl`) في الفقرات والجداول.
+   - إصلاح التيبوغرافيا التلقائي (`repair_arabic_text_formatting`): تصحيح الأقواس المقلوبة، توحيد الأرقام (شرقية/غربية)، إزالة الكشيدات الزائدة، وتصحيح همزات الألف والياء.
    - دعم كافة الخطوط العربية الشائعة: `Amiri`, `Traditional Arabic`, `Cairo`, `Sakkal Majalla`, `Simplified Arabic`.
-   - محاذاة الكشيدة (`distribute` / `kashida`) وتعديل المسافات بين الأسطر (1.25x - 1.5x) لضمان وضوح التشكيل والتشابك.
-2. **إنشاء المستندات وإدارتها الشاملة**:
+2. **تفكيك وتعديل شفرات الـ XML المتقدم (`XML Decompression & Surgery`)**:
+   - تفكيك أرشيف `.docx` والتعديل الجراحي المباشر على أي ملف XML داخلي (`decompress_and_modify_word_xml`) مثل `word/document.xml`, `word/styles.xml`, `word/numbering.xml`.
+3. **إنشاء المستندات وإدارتها الشاملة**:
    - إمكانية إنشاء كافة أنواع الكتابات والمستندات (خطابات رسمية، تقارير تنفيذية، عقود قانونية، قرارات إدارية، أدلة سياسات، أوراق بحثية، محاضر اجتماعات).
-   - تحكم كامل في حجم الورق (`A4`, `Letter`, `A3`) والبهامش والاتجاه (طولي/عرضي).
-3. **أتمتة ذكية دون الحاجة لأوامر نصية (`Zero Slash-Commands`)**:
+4. **أتمتة ذكية دون الحاجة لأوامر نصية (`Zero Slash-Commands`)**:
    - محرك تحليل المقاصد (`resolve_and_execute_document_intent`) يفهم طلباتك النصية العادية ويقوم بتوليد المستند المنسق مباشرة بخطوة واحدة.
-4. **جداول متوافقة مع الاتجاه العربي (`RTL Tables`)**:
-   - إنشاء جداول بخيار `visuallyRightToLeft: true` وتنسيق رأس الجدول وألوان الصفوف المتبادلة.
-5. **حقن القوالب وتعديل الـ XML الجراحي**:
-   - دمج بيانات JSON في قوالب `.docx` محددة المتغيرات (`docxtemplater`).
-   - إمكانية استبدال النصوص والعناصر مباشرة في ملف `word/document.xml`.
-6. **ترويس وتذييل وترقيم عربي**:
-   - ترقيم الصفحات التلقائي في التذييل بصيغة (`صفحة X من Y`).
 
 ---
 
-### 🛠️ فهرس الأدوات المتاحة (Tools)
+### 🛠️ فهرس الأدوات المتاحة (13 Tools)
 
 | اسم الأداة | الوصف والتطبيق |
 |---|---|
 | `resolve_and_execute_document_intent` | إنشاء وتنسيق مستند وورد عربي كامل خطوة واحدة من خلال الوصف النصي العادي. |
+| `repair_arabic_text_formatting` | فحص وإصلاح عيوب التيبوغرافيا العربية للأقواس المقلوبة والأرقام والألف والياء والمسافات. |
+| `decompress_and_modify_word_xml` | تفكيك أرشيف docx والتعديل الجراحي بالـ Regex على أي ملف XML داخلي (document, styles, numbering). |
 | `create_word_document` | إنشاء مستند `.docx` جديد بتحديد المقاس والبهامش والخط والاتجاه الافتراضي. |
 | `add_paragraph_to_document` | إدراج فقرة نصية منسقة (الخط، الحجم، اللون، الاتجاه، الكشيدة، المسافات). |
 | `add_heading_to_document` | إدراج عناوين رئيسية أو فرعية (H1-H6) بلون وتنسيق مخصص. |
@@ -71,21 +67,13 @@
 
 ### 📦 طريقة التركيب والتشغيل عبر npx
 
-#### التشغيل المباشر
 ```bash
 npx -y mcp-arabic-ms-word@latest
-```
-
-#### التثبيت المباشر في مشروعك
-```bash
-npm install mcp-arabic-ms-word
 ```
 
 ---
 
 ### ⚙️ إعدادات العميل القياسية (`mcp_config.json`)
-
-قم بإضافة الخادم إلى إعدادات تطبيق العميل (مثل Antigravity أو Claude Desktop):
 
 ```json
 {
@@ -107,29 +95,9 @@ npm install mcp-arabic-ms-word
 
 ### Key Features
 
-- **Deep Arabic Typography**: Native Right-to-Left (`rtl`) layout, `bidi` paragraph flags, Kashida justification (`distribute`), line height control, and Arabic font support (`Amiri`, `Traditional Arabic`, `Cairo`, `Sakkal Majalla`).
-- **Universal Document Engine**: Automated creation and formatting for letters, reports, contracts, manuals, research papers, and technical specifications.
-- **Natural Language Intent Engine**: `resolve_and_execute_document_intent` converts user prompts into complete Word documents in a single turn.
-- **RTL Tables & Visual Styling**: RTL visual tables (`w:bidiVisual`), header background colors, cell padding, and alternating row shading.
-- **XML Surgery & Docx Templating**: Precision WordprocessingML element replacement and JSON template merging (`docxtemplater`).
-
----
-
-### Standard Configuration (`mcp_config.json`)
-
-```json
-{
-  "mcpServers": {
-    "mcp-arabic-ms-word": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-arabic-ms-word@latest"
-      ]
-    }
-  }
-}
-```
+- **Arabic Text Repair Engine**: Automatic correction of inverted brackets in RTL text, digit standardization (Eastern/Western), whitespace trimming, and Alef/Yeh normalization.
+- **XML Decompression & Surgery**: Decompress `.docx` ZIP archives and perform surgical pattern replacements in `word/document.xml`, `word/styles.xml`, and `word/numbering.xml`.
+- **WordMasterAgent Integration**: Unified architecture orchestrating 13 specialized tools across 5 master skills.
 
 ---
 

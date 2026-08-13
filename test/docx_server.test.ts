@@ -9,6 +9,8 @@ import { handleAddTable } from '../src/tools/add_table.js';
 import { handleInspectDocument } from '../src/tools/inspect_document.js';
 import { handleConvertToMarkdown } from '../src/tools/convert_to_markdown.js';
 import { handleResolveIntent } from '../src/tools/resolve_intent.js';
+import { handleRepairText } from '../src/tools/repair_text.js';
+import { handleDecompressXml } from '../src/tools/decompress_xml.js';
 
 describe('mcp-arabic-ms-word Server Integration Tests', () => {
   const testDocPath = path.join(process.cwd(), 'test_output_arabic.docx');
@@ -95,5 +97,32 @@ describe('mcp-arabic-ms-word Server Integration Tests', () => {
     assert.ok(res.data);
     assert.equal(res.data.archetype, 'official_letter');
     assert.equal(fs.existsSync(autoDocPath), true);
+  });
+
+  it('should repair Arabic text formatting and digits', async () => {
+    const res = await handleRepairText({
+      text: 'اختبار  النص   العربي (123) ـتـحـسينـ',
+      standardizeDigits: 'eastern',
+      removeKashida: true,
+      trimExtraSpaces: true,
+    });
+
+    assert.equal(res.status, 'success');
+    assert.ok(res.data);
+    assert.ok(res.data.repairedText.includes('١٢٣'));
+    assert.ok(!res.data.repairedText.includes('ـ'));
+  });
+
+  it('should decompress and modify WordprocessingML XML files in archive', async () => {
+    const res = await handleDecompressXml({
+      filePath: testDocPath,
+      targetXmlPath: 'word/document.xml',
+      searchPattern: 'بسم الله الرحمن الرحيم',
+      replacementValue: 'بسم الله الرحمن الرحيم - معدل بالـ XML',
+    });
+
+    assert.equal(res.status, 'success');
+    assert.ok(res.data);
+    assert.ok(res.data.matchCount >= 1);
   });
 });

@@ -14,6 +14,8 @@ const modify_xml_element_js_1 = require("./tools/modify_xml_element.js");
 const inject_template_js_1 = require("./tools/inject_template.js");
 const convert_to_markdown_js_1 = require("./tools/convert_to_markdown.js");
 const resolve_intent_js_1 = require("./tools/resolve_intent.js");
+const repair_text_js_1 = require("./tools/repair_text.js");
+const decompress_xml_js_1 = require("./tools/decompress_xml.js");
 const index_js_2 = require("./resources/index.js");
 const index_js_3 = require("./prompts/index.js");
 const logger_js_1 = require("./core/logger.js");
@@ -234,6 +236,40 @@ function createWordMcpServer() {
                 required: ['prompt'],
             },
         },
+        {
+            name: 'repair_arabic_text_formatting',
+            title: 'Repair Arabic Text Formatting & Punctuation',
+            description: 'Automatically detects and fixes Arabic typography defects: normalizes Alef/Yeh forms, standardizes digits (Eastern/Western), fixes inverted brackets/parentheses in RTL, trims whitespace, and strips tatweel/kashida.',
+            inputSchema: {
+                type: 'object',
+                properties: {
+                    text: { type: 'string', description: 'Arabic text string to inspect and repair' },
+                    normalizeAlef: { type: 'boolean', default: false, description: 'Normalize Alef forms (أ, إ, آ -> ا)' },
+                    normalizeYeh: { type: 'boolean', default: false, description: 'Normalize Dotless Yeh (ى -> ي)' },
+                    standardizeDigits: { type: 'string', enum: ['eastern', 'western', 'none'], default: 'none', description: 'Standardize digits' },
+                    fixInvertedPunctuation: { type: 'boolean', default: true, description: 'Fix inverted parentheses/punctuation' },
+                    trimExtraSpaces: { type: 'boolean', default: true, description: 'Trim extra whitespace' },
+                    removeKashida: { type: 'boolean', default: false, description: 'Remove tatweel/kashida' },
+                },
+                required: ['text'],
+            },
+        },
+        {
+            name: 'decompress_and_modify_word_xml',
+            title: 'Decompress & Modify WordprocessingML XML',
+            description: 'Decompresses .docx archives to inspect and modify any inner XML structure (word/document.xml, word/styles.xml, word/numbering.xml, word/settings.xml) via regex/pattern replacement.',
+            inputSchema: {
+                type: 'object',
+                properties: {
+                    filePath: { type: 'string', description: 'Path to .docx archive file' },
+                    targetXmlPath: { type: 'string', default: 'word/document.xml', description: 'Inner XML file path inside docx zip' },
+                    searchPattern: { type: 'string', description: 'Regex pattern or string to search inside target XML' },
+                    replacementValue: { type: 'string', description: 'Replacement string or XML payload to inject' },
+                    outputPath: { type: 'string', description: 'Optional output .docx path' },
+                },
+                required: ['filePath', 'searchPattern', 'replacementValue'],
+            },
+        },
     ];
     // Tool Handlers
     server.setRequestHandler(types_js_1.ListToolsRequestSchema, async () => ({
@@ -276,6 +312,12 @@ function createWordMcpServer() {
                 break;
             case 'resolve_and_execute_document_intent':
                 result = await (0, resolve_intent_js_1.handleResolveIntent)(args);
+                break;
+            case 'repair_arabic_text_formatting':
+                result = await (0, repair_text_js_1.handleRepairText)(args);
+                break;
+            case 'decompress_and_modify_word_xml':
+                result = await (0, decompress_xml_js_1.handleDecompressXml)(args);
                 break;
             default:
                 throw new types_js_1.McpError(types_js_1.ErrorCode.MethodNotFound, `Unknown tool: ${name}`);

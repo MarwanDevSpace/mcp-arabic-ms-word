@@ -33,5 +33,10 @@ export declare class ArabicXmlEngine {
     inspectDocx(filePath: string): Promise<DocumentInspectionResult>;
     convertToMarkdown(filePath: string): Promise<string>;
     replaceTextInXml(filePath: string, targetText: string, replacementText: string, outputPath?: string): Promise<string>;
+    decompressAndModifyXmlFile(filePath: string, targetXmlPath: string | undefined, searchPattern: string, replacementValue: string, outputPath?: string): Promise<{
+        outputPath: string;
+        modifiedXmlPath: string;
+        matchCount: number;
+    }>;
 }
 //# sourceMappingURL=xml_engine.d.ts.map
