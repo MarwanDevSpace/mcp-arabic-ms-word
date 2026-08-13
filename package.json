@@ -1,6 +1,6 @@
 {
   "name": "mcp-arabic-ms-word",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "High-precision Arabic Microsoft Word MCP server for docx creation, inspection, RTL styling, XML injection, and template processing",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
