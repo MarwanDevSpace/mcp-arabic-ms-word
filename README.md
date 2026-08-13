@@ -3,6 +3,7 @@
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![npm version](https://img.shields.io/npm/v/mcp-arabic-ms-word.svg)](https://www.npmjs.com/package/mcp-arabic-ms-word)
 [![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![MCP Protocol](https://img.shields.io/badge/MCP-Protocol--v1.0-purple.svg)](https://modelcontextprotocol.io)
 [![Author](https://img.shields.io/badge/Author-MarwanDevSpace-orange.svg)](https://github.com/MarwanDevSpace)
@@ -18,7 +19,7 @@
 - [العربية (Arabic)](#-العربية)
   - [المميزات الرئيسية](#-المميزات-الرئيسية)
   - [فهرس الأدوات المتاحة (Tools)](#-فهرس-الأدوات-المتاحة-tools)
-  - [طريقة التركيب والتشغيل](#-طريقة-التركيب-والتشغيل)
+  - [طريقة التركيب والتشغيل عبر npx](#-طريقة-التركيب-والتشغيل-عبر-npx)
   - [إعدادات العميل (mcp_config.json)](#-إعدادات-العميل-mcp_configjson)
 - [English Section](#-english-version)
   - [Key Features](#key-features)
@@ -68,30 +69,21 @@
 
 ---
 
-### 📦 طريقة التركيب والتشغيل
+### 📦 طريقة التركيب والتشغيل عبر npx
 
-#### المتطلبات الأساسية
-- Node.js >= 18.0.0
-- npm / npx
-
-#### البناء والتشغيل المحلي
+#### التشغيل المباشر
 ```bash
-# الانتقال لمجلد المشروع
-cd mcp-arabic-ms-word
+npx -y mcp-arabic-ms-word@latest
+```
 
-# تثبيت الحزم والمكتبات
-npm install
-
-# بناء مشروع TypeScript
-npm run build
-
-# تشغيل الاختبارات للتأكد من السلامة
-npm test
+#### التثبيت المباشر في مشروعك
+```bash
+npm install mcp-arabic-ms-word
 ```
 
 ---
 
-### ⚙️ إعدادات العميل (`mcp_config.json`)
+### ⚙️ إعدادات العميل القياسية (`mcp_config.json`)
 
 قم بإضافة الخادم إلى إعدادات تطبيق العميل (مثل Antigravity أو Claude Desktop):
 
@@ -99,14 +91,11 @@ npm test
 {
   "mcpServers": {
     "mcp-arabic-ms-word": {
-      "command": "node",
-      "args": ["C:/Users/DKurdistan/Desktop/mcp-arabic-ms-word/dist/index.js"],
-      "env": {
-        "WORKSPACE_ROOT": "C:/Users/DKurdistan/Desktop/mcp-arabic-ms-word",
-        "DEFAULT_FONT": "Amiri",
-        "DEFAULT_DIRECTION": "rtl",
-        "LOG_LEVEL": "info"
-      }
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-arabic-ms-word@latest"
+      ]
     }
   }
 }
@@ -126,19 +115,21 @@ npm test
 
 ---
 
-### Tools Summary
+### Standard Configuration (`mcp_config.json`)
 
-- `resolve_and_execute_document_intent`: Single-shot natural language document generation.
-- `create_word_document`: Create blank `.docx` with custom margins, paper size, and RTL defaults.
-- `add_paragraph_to_document`: Append styled Arabic/English text.
-- `add_heading_to_document`: Append styled H1-H6 headings.
-- `add_table_to_document`: Append structured RTL tables.
-- `add_image_to_document`: Embed PNG/JPEG images.
-- `add_header_footer_to_document`: Add headers/footers with page numbers.
-- `inspect_word_document`: Inspect docx metadata, fonts, and structure.
-- `convert_word_to_markdown`: Extract document content as Markdown.
-- `inject_template_data`: Merge JSON data into docx template placeholders.
-- `modify_word_xml_element`: Perform surgical XML string replacements in `document.xml`.
+```json
+{
+  "mcpServers": {
+    "mcp-arabic-ms-word": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-arabic-ms-word@latest"
+      ]
+    }
+  }
+}
+```
 
 ---
 
