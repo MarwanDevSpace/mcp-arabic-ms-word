@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Output & Build
+*.tgz
+*.log
+
+# Temporary docx lock files
+~$*.docx
+test_output_arabic.docx
+test_auto_letter.docx
+
+# System & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
