@@ -7,6 +7,7 @@
 [![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![MCP Protocol](https://img.shields.io/badge/MCP-Protocol--v1.0-purple.svg)](https://modelcontextprotocol.io)
 [![Author](https://img.shields.io/badge/Author-MarwanDevSpace-orange.svg)](https://github.com/MarwanDevSpace)
+[![Glama MCP](https://glama.ai/mcp/servers/badge)](https://glama.ai/mcp/servers/@MarwanDevSpace/mcp-arabic-ms-word)
 
 **خادم بروتوكول MCP المتقدم (WordMasterAgent) المتخصص في إنشاء وتنسيق وحقن وفحص وإصلاح نصوص وتفكيك شفرات XML لمستندات Microsoft Word بدعم كامل ودقيق للغة العربية والاتجاه من اليمين إلى اليسار (RTL).**
 
@@ -18,9 +19,10 @@
 
 - [العربية (Arabic)](#-العربية)
   - [المميزات الرئيسية](#-المميزات-الرئيسية)
-  - [فهرس الأدوات المتاحة (13 Tool)](#-فهرس-الأدوات-المتاحة-13-tools)
+  - [فهرس الأدوات المتاحة (13 Tools)](#-فهرس-الأدوات-المتاحة-13-tools)
   - [طريقة التركيب والتشغيل عبر npx](#-طريقة-التركيب-والتشغيل-عبر-npx)
   - [إعدادات العميل (mcp_config.json)](#-إعدادات-العميل-mcp_configjson)
+  - [مواصفات Glama.json للمسرد](#-مواصفات-glamajson-للمسرد)
 - [English Section](#-english-version)
   - [Key Features](#key-features)
   - [Tools Inventory](#tools-inventory)
@@ -88,6 +90,12 @@ npx -y mcp-arabic-ms-word@latest
   }
 }
 ```
+
+---
+
+### 📑 مواصفات Glama.json للمسرد
+
+المشروع متوافق 100% مع مسردGlama MCP Registry ومزود بملف [glama.json](glama.json) لتأكيد أعلى درجات التقييم (High Score).
 
 ---
 
