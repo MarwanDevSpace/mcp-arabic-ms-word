@@ -1,6 +1,8 @@
-# خادم خبير وورد العربي — MCP Arabic Microsoft Word Server
-
 <div align="center">
+
+<img src="assets/ms-ar.png" alt="mcp-arabic-ms-word Logo" width="200" style="border-radius: 16px; margin-bottom: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
+
+# خادم خبير وورد العربي — MCP Arabic Microsoft Word Server
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![npm version](https://img.shields.io/npm/v/mcp-arabic-ms-word.svg)](https://www.npmjs.com/package/mcp-arabic-ms-word)
@@ -95,7 +97,7 @@ npx -y mcp-arabic-ms-word@latest
 
 ### 📑 مواصفات Glama.json للمسرد
 
-المشروع متوافق 100% مع مسردGlama MCP Registry ومزود بملف [glama.json](glama.json) لتأكيد أعلى درجات التقييم (High Score).
+المشروع متوافق 100% مع مسرد Glama MCP Registry ومزود بملف [glama.json](glama.json) لتأكيد أعلى درجات التقييم (High Score).
 
 ---
 
