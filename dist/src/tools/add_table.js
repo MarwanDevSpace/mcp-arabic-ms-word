@@ -9,21 +9,21 @@ const docx_builder_js_1 = require("../domain/docx_builder.js");
 const index_js_1 = require("../contracts/index.js");
 const logger_js_1 = require("../core/logger.js");
 exports.addTableSchema = zod_1.z.object({
-    filePath: zod_1.z.string().describe('Path to the .docx file'),
+    filePath: zod_1.z.string().describe('Path to target .docx file to modify in-place'),
     columns: zod_1.z
         .array(zod_1.z.object({
-        header: zod_1.z.string().describe('Column header text'),
-        widthPercent: zod_1.z.number().optional().describe('Column width percentage (0-100)'),
+        header: zod_1.z.string().describe('Column header text label'),
+        widthPercent: zod_1.z.number().optional().describe('Column width percentage relative to table width (0-100)'),
     }))
         .min(1)
-        .describe('Array of column header definitions'),
+        .describe('Array of column definitions with header label and width percentage'),
     rows: zod_1.z
         .array(zod_1.z.object({
-        cells: zod_1.z.array(zod_1.z.string()).describe('Array of cell values for this row'),
-        backgroundColor: zod_1.z.string().optional().describe('Custom row background hex color'),
+        cells: zod_1.z.array(zod_1.z.string()).describe('Cell text values matching column count'),
+        backgroundColor: zod_1.z.string().optional().describe('Optional six-character hex color code for row background shading'),
     }))
-        .describe('Array of row data'),
-    isRtl: zod_1.z.boolean().optional().default(true).describe('RTL table direction (w:bidiVisual)'),
+        .describe('Array of row objects containing cell values array and optional background color hex'),
+    isRtl: zod_1.z.boolean().optional().default(true).describe('Set to true to apply Right-to-Left visual column order (w:bidiVisual)'),
 });
 async function handleAddTable(input) {
     try {

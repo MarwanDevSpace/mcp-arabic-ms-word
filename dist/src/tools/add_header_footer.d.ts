@@ -20,5 +20,11 @@ export declare const addHeaderFooterSchema: z.ZodObject<{
     includePageNumbers?: boolean | undefined;
 }>;
 export type AddHeaderFooterInput = z.input<typeof addHeaderFooterSchema>;
-export declare function handleAddHeaderFooter(input: AddHeaderFooterInput): Promise<StandardResultEnvelope>;
+export interface AddHeaderFooterOutput {
+    filePath: string;
+    headerText?: string;
+    footerText?: string;
+    includePageNumbers: boolean;
+}
+export declare function handleAddHeaderFooter(input: AddHeaderFooterInput): Promise<StandardResultEnvelope<AddHeaderFooterOutput>>;
 //# sourceMappingURL=add_header_footer.d.ts.map

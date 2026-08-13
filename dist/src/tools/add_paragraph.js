@@ -9,19 +9,19 @@ const docx_builder_js_1 = require("../domain/docx_builder.js");
 const index_js_1 = require("../contracts/index.js");
 const logger_js_1 = require("../core/logger.js");
 exports.addParagraphSchema = zod_1.z.object({
-    filePath: zod_1.z.string().describe('Path to the .docx file to append paragraph to'),
-    text: zod_1.z.string().describe('Paragraph text content (Arabic/English)'),
-    fontFamily: zod_1.z.string().optional().describe('Font name (e.g. Amiri, Traditional Arabic, Cairo, Calibri)'),
-    fontSizePt: zod_1.z.number().optional().default(14).describe('Font size in points'),
-    direction: zod_1.z.enum(['rtl', 'ltr']).optional().default('rtl').describe('Text direction'),
-    alignment: zod_1.z.enum(['right', 'left', 'center', 'justify', 'kashida']).optional().default('right').describe('Paragraph alignment'),
-    lineSpacingMultiplier: zod_1.z.number().optional().default(1.25).describe('Line spacing (e.g., 1.0, 1.25, 1.5, 2.0)'),
-    spaceBeforePt: zod_1.z.number().optional().default(0).describe('Spacing before paragraph in pt'),
-    spaceAfterPt: zod_1.z.number().optional().default(6).describe('Spacing after paragraph in pt'),
-    colorHex: zod_1.z.string().optional().default('000000').describe('Text color hex code'),
-    bold: zod_1.z.boolean().optional().default(false).describe('Bold font weight'),
-    italic: zod_1.z.boolean().optional().default(false).describe('Italic font style'),
-    underline: zod_1.z.boolean().optional().default(false).describe('Underline text'),
+    filePath: zod_1.z.string().describe('Path to target .docx file to modify in-place'),
+    text: zod_1.z.string().describe('Paragraph text content string'),
+    fontFamily: zod_1.z.string().optional().describe('Font family name (e.g. Amiri, Cairo, Traditional Arabic)'),
+    fontSizePt: zod_1.z.number().optional().default(14).describe('Font size in points (default 14 pt)'),
+    direction: zod_1.z.enum(['rtl', 'ltr']).optional().default('rtl').describe('Text direction (rtl for Right-to-Left Arabic, ltr for English)'),
+    alignment: zod_1.z.enum(['right', 'left', 'center', 'justify', 'kashida']).optional().default('right').describe('Text alignment (right, left, center, justify, or kashida for Arabic justification)'),
+    lineSpacingMultiplier: zod_1.z.number().optional().default(1.25).describe('Line spacing height multiplier (default 1.25 for Arabic diacritics readability)'),
+    spaceBeforePt: zod_1.z.number().optional().default(0).describe('Spacing before paragraph in points'),
+    spaceAfterPt: zod_1.z.number().optional().default(6).describe('Spacing after paragraph in points (default 6 pt)'),
+    colorHex: zod_1.z.string().optional().default('000000').describe('Six-character hex color code without leading # (default 000000)'),
+    bold: zod_1.z.boolean().optional().default(false).describe('Set to true for bold text weight'),
+    italic: zod_1.z.boolean().optional().default(false).describe('Set to true for italic style'),
+    underline: zod_1.z.boolean().optional().default(false).describe('Set to true for underlined text'),
 });
 async function handleAddParagraph(input) {
     try {

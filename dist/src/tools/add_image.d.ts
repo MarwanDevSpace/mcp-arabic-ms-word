@@ -20,5 +20,11 @@ export declare const addImageSchema: z.ZodObject<{
     align?: "right" | "left" | "center" | undefined;
 }>;
 export type AddImageInput = z.input<typeof addImageSchema>;
-export declare function handleAddImage(input: AddImageInput): Promise<StandardResultEnvelope>;
+export interface AddImageOutput {
+    docPath: string;
+    imgPath: string;
+    widthPx: number;
+    heightPx: number;
+}
+export declare function handleAddImage(input: AddImageInput): Promise<StandardResultEnvelope<AddImageOutput>>;
 //# sourceMappingURL=add_image.d.ts.map

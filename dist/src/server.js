@@ -22,7 +22,7 @@ const logger_js_1 = require("./core/logger.js");
 function createWordMcpServer() {
     const server = new index_js_1.Server({
         name: 'mcp-arabic-ms-word',
-        version: '1.1.3',
+        version: '1.2.1',
     }, {
         capabilities: {
             tools: {},
@@ -30,16 +30,17 @@ function createWordMcpServer() {
             prompts: {},
         },
     });
-    // Define tools metadata with full Glama & MCP Protocol 2026 specifications
+    // Define tools metadata with full Glama 5.0/5.0 dimensions & MCP Protocol 2026 specifications
     const tools = [
         {
             name: 'create_word_document',
             title: 'Create Arabic MS Word Document',
-            description: 'Creates a new empty Microsoft Word (.docx) document with custom page setup, margins, metadata, and default Arabic typography (Amiri/Cairo font, RTL direction). Mutating file-creation tool. Overwrites target file at `filePath` if it already exists and creates parent directories if needed. Returns a structured result envelope with file URI. WHEN TO USE: Use at the start of a document generation workflow to establish page boundaries and defaults. WHEN NOT TO USE: Do not use to modify existing documents—use `add_paragraph_to_document`, `add_heading_to_document`, or `add_table_to_document` instead. ALTERNATIVES: `resolve_and_execute_document_intent` for single-shot automated generation.',
+            description: 'Creates a new empty Microsoft Word (.docx) document on the filesystem with customized page dimensions, margins, document metadata, and default Arabic font and RTL settings. Mutating file-creation tool. Behavior & Side Effects: Creates the file at `filePath` (and creates parent directories automatically if they do not exist); silently overwrites existing file at `filePath` if already present; initializes document body with zero paragraphs. Parameter Relationships: `pageSize` (\'A4\', \'Letter\', \'A3\') sets physical page boundaries; `orientation` (\'portrait\'/\'landscape\') rotates layout; `defaultFont` (default: \'Amiri\') sets global typography style; margin parameters (`marginTopCm`, `marginBottomCm`, `marginLeftCm`, `marginRightCm`) accept centimeters (default 2.54 cm / 1 inch); metadata fields (`title`, `author`, `subject`) are written to `docProps/core.xml`. Returns a structured result envelope containing the created file URI and metadata. WHEN TO USE: Use as the required first step when building a new document from scratch to configure page size, margins, and Arabic typography foundation. WHEN NOT TO USE: Do not use to modify or append content to existing documents (use `add_paragraph_to_document`, `add_heading_to_document`, or `add_table_to_document`). Do not use if you want one-shot AI document generation (use `resolve_and_execute_document_intent`). ALTERNATIVES: `resolve_and_execute_document_intent` for single-step automated document creation, `inject_template_data` for pre-designed templates.',
             annotations: {
                 readOnly: false,
                 destructive: true,
                 idempotent: false,
+                openWorld: false,
             },
             inputSchema: {
                 type: 'object',
@@ -58,15 +59,53 @@ function createWordMcpServer() {
                 },
                 required: ['filePath'],
             },
+            outputSchema: {
+                type: 'object',
+                properties: {
+                    status: { type: 'string', enum: ['success', 'partial', 'blocked', 'failed'], description: 'Execution status' },
+                    summary: { type: 'string', description: 'Human-readable outcome description' },
+                    data: {
+                        type: 'object',
+                        properties: {
+                            filePath: { type: 'string', description: 'Absolute path to created .docx file' },
+                            title: { type: 'string', description: 'Document title metadata' },
+                            author: { type: 'string', description: 'Document author metadata' },
+                            pageSize: { type: 'string', description: 'Page paper size' },
+                            orientation: { type: 'string', description: 'Page orientation' },
+                            defaultFont: { type: 'string', description: 'Default typography font family' },
+                        },
+                        required: ['filePath'],
+                    },
+                    evidence: {
+                        type: 'object',
+                        properties: {
+                            artifacts: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    properties: {
+                                        label: { type: 'string' },
+                                        uri: { type: 'string' },
+                                    },
+                                    required: ['label', 'uri'],
+                                },
+                            },
+                        },
+                    },
+                    warnings: { type: 'array', items: { type: 'string' } },
+                },
+                required: ['status', 'summary', 'data'],
+            },
         },
         {
             name: 'inspect_word_document',
             title: 'Inspect Word Document Architecture',
-            description: 'Parses an existing .docx file and returns a comprehensive structural analysis (paragraph count, heading levels, table dimensions, detected font set, RTL direction flags, and core metadata). Read-only tool with zero side effects on the target file. Fails with an error if the file path is invalid or corrupted. Returns structured JSON inspection data. WHEN TO USE: Use before editing or modifying a document to inspect existing structure, font choices, or layout. WHEN NOT TO USE: Do not use to convert text into readable Markdown—use `convert_word_to_markdown` instead. ALTERNATIVES: `convert_word_to_markdown` for text extraction.',
+            description: 'Parses an existing Microsoft Word (.docx) file archive and returns comprehensive structural inspection data (paragraph counts, heading hierarchy, table dimensions, embedded images, detected font families, RTL direction flags, and core metadata). Non-mutating read-only tool with zero side effects on the inspected file. Behavior & Error Handling: Opens the .docx ZIP package in read-only mode, inspects `word/document.xml`, `docProps/core.xml`, and media directories; fails with FileOperationError if file is missing or not a valid docx archive. Returns a structured result envelope with typed data containing structuralSummary, headings array, tables array, detectedFonts array, metadata object, and sampleText string. WHEN TO USE: Use before editing or auditing a document to understand its existing layout, font choices, heading structure, or RTL compliance. WHEN NOT TO USE: Do not use to extract plain readable Markdown text (use `convert_word_to_markdown` instead). Do not use to modify documents. ALTERNATIVES: `convert_word_to_markdown` for readable text conversion.',
             annotations: {
                 readOnly: true,
                 destructive: false,
                 idempotent: true,
+                openWorld: false,
             },
             inputSchema: {
                 type: 'object',
@@ -75,15 +114,47 @@ function createWordMcpServer() {
                 },
                 required: ['filePath'],
             },
+            outputSchema: {
+                type: 'object',
+                properties: {
+                    status: { type: 'string', enum: ['success', 'partial', 'blocked', 'failed'] },
+                    summary: { type: 'string' },
+                    data: {
+                        type: 'object',
+                        properties: {
+                            filePath: { type: 'string' },
+                            metadata: { type: 'object' },
+                            structuralSummary: {
+                                type: 'object',
+                                properties: {
+                                    paragraphCount: { type: 'number' },
+                                    headingCount: { type: 'number' },
+                                    tableCount: { type: 'number' },
+                                    imageCount: { type: 'number' },
+                                    isRtlDocument: { type: 'boolean' },
+                                },
+                                required: ['paragraphCount', 'headingCount', 'tableCount', 'imageCount', 'isRtlDocument'],
+                            },
+                            headings: { type: 'array' },
+                            tables: { type: 'array' },
+                            detectedFonts: { type: 'array', items: { type: 'string' } },
+                            sampleText: { type: 'string' },
+                        },
+                        required: ['filePath', 'structuralSummary', 'detectedFonts'],
+                    },
+                },
+                required: ['status', 'summary', 'data'],
+            },
         },
         {
             name: 'add_paragraph_to_document',
             title: 'Add Styled Paragraph to Document',
-            description: 'Appends a styled Arabic or English body paragraph to an existing Word document. Mutating tool that modifies `filePath` in-place. Requires an existing `.docx` document created via `create_word_document`. Supports font selection (Amiri, Cairo), pt size, hex colors (e.g. 000000), line spacing multiplier (1.25x), Kashida justification (`kashida` or `distribute`), and RTL flags. Returns a structured result envelope with updated paragraph count. WHEN TO USE: Use for adding standard body text, notes, or formatted paragraphs. WHEN NOT TO USE: Do not use for headings—use `add_heading_to_document` instead. Do not use for tabular data—use `add_table_to_document`. ALTERNATIVES: `add_heading_to_document` for section headers, `inject_template_data` for placeholder merging.',
+            description: 'Appends a styled body paragraph with rich Arabic or English typography (font family, pt size, color, RTL bidi direction, Kashida justification, and line spacing) to an existing Microsoft Word (.docx) document. Mutating tool that modifies `filePath` in-place by appending a new paragraph element to the document body. Behavior & Prerequisites: Target document at `filePath` must already exist (create one first with `create_word_document`); fails with FileOperationError if file is missing; does not overwrite existing document content. Parameter Relationships: `fontFamily` (e.g. \'Amiri\', \'Cairo\', \'Traditional Arabic\') sets typeface; `fontSizePt` (default: 14pt) sets size in points; `direction` (\'rtl\'/\'ltr\') sets paragraph bidi flag; `alignment` (\'right\', \'left\', \'center\', \'justify\', \'kashida\') sets text alignment (\'kashida\' applies Arabic distributed justification); `lineSpacingMultiplier` (default: 1.25) optimizes line height for Arabic diacritics; `colorHex` (default: \'000000\') accepts 6-character hex color without \'#\'; `bold`, `italic`, `underline` toggle run styles. Returns a structured result envelope with updated paragraph count and file URI. WHEN TO USE: Use for adding standard body text, explanatory paragraphs, notes, quotes, or list items to an existing document. WHEN NOT TO USE: Do not use for headings or section titles (use `add_heading_to_document` instead). Do not use for tabular datasets (use `add_table_to_document`). ALTERNATIVES: `add_heading_to_document` for headings, `add_table_to_document` for tables.',
             annotations: {
                 readOnly: false,
                 destructive: false,
                 idempotent: false,
+                openWorld: false,
             },
             inputSchema: {
                 type: 'object',
@@ -104,15 +175,37 @@ function createWordMcpServer() {
                 },
                 required: ['filePath', 'text'],
             },
+            outputSchema: {
+                type: 'object',
+                properties: {
+                    status: { type: 'string', enum: ['success', 'partial', 'blocked', 'failed'] },
+                    summary: { type: 'string' },
+                    data: {
+                        type: 'object',
+                        properties: {
+                            filePath: { type: 'string' },
+                            text: { type: 'string' },
+                            fontFamily: { type: 'string' },
+                            fontSizePt: { type: 'number' },
+                            direction: { type: 'string' },
+                            alignment: { type: 'string' },
+                            paragraphCount: { type: 'number' },
+                        },
+                        required: ['filePath', 'paragraphCount'],
+                    },
+                },
+                required: ['status', 'summary', 'data'],
+            },
         },
         {
             name: 'add_heading_to_document',
             title: 'Add Heading to Document',
-            description: 'Appends a styled Heading (H1-H6) to an existing Word document. Mutating tool that modifies `filePath` in-place. Requires an existing `.docx` document. Configures heading level (1-6), font size, brand hex color (e.g. 1F4E78), alignment, and RTL direction. Returns a structured result envelope. WHEN TO USE: Use to create section titles, document headings, and subheadings. WHEN NOT TO USE: Do not use for regular body paragraphs—use `add_paragraph_to_document` instead. ALTERNATIVES: `add_paragraph_to_document` with bold styling.',
+            description: 'Appends a styled Heading element (H1 to H6) to the end of an existing Microsoft Word (.docx) document. Mutating tool that modifies the target document in-place on the filesystem without overwriting existing content. Behavior & Prerequisites: Target document at `filePath` must already exist (create one first with `create_word_document`); appends heading to the document body; fails with FileOperationError if file is missing. Parameter Relationships: `level` (1-6) determines semantic heading hierarchy; `fontSizePt` defaults automatically based on level (H1=22pt, H2=18pt, H3=16pt, etc.) if omitted; `colorHex` accepts 6-character hex string without leading \'#\' (e.g. \'1F4E78\' for navy blue); `direction` (\'rtl\'/\'ltr\') controls text flow and bidi alignment. Returns a structured result envelope with file URI. WHEN TO USE: Use when adding document titles, section headers, or numbered chapter headings. WHEN NOT TO USE: Do not use for regular body text, bullet lists, or multiline content blocks (use `add_paragraph_to_document` instead). Do not use to start a new document from scratch (use `create_word_document` first). ALTERNATIVES: `add_paragraph_to_document` for body text, `resolve_and_execute_document_intent` for full automated document generation.',
             annotations: {
                 readOnly: false,
                 destructive: false,
                 idempotent: false,
+                openWorld: false,
             },
             inputSchema: {
                 type: 'object',
@@ -128,15 +221,34 @@ function createWordMcpServer() {
                 },
                 required: ['filePath', 'text'],
             },
+            outputSchema: {
+                type: 'object',
+                properties: {
+                    status: { type: 'string', enum: ['success', 'partial', 'blocked', 'failed'] },
+                    summary: { type: 'string' },
+                    data: {
+                        type: 'object',
+                        properties: {
+                            filePath: { type: 'string' },
+                            text: { type: 'string' },
+                            level: { type: 'number' },
+                            headingCount: { type: 'number' },
+                        },
+                        required: ['filePath', 'headingCount'],
+                    },
+                },
+                required: ['status', 'summary', 'data'],
+            },
         },
         {
             name: 'add_table_to_document',
             title: 'Add RTL Table to Document',
-            description: 'Appends a structured table with Right-to-Left layout (`w:bidiVisual`), styled header row, custom cell background shading, and borders to an existing Word document. Mutating tool that modifies `filePath` in-place. Requires an existing `.docx` document. Accepts header definitions with width percentages and row cell data arrays. Returns a structured result envelope. WHEN TO USE: Use to present tabular data, financial figures, schedules, or key-value matrices in Arabic documents. WHEN NOT TO USE: Do not use for single-line text or headers—use `add_paragraph_to_document` or `add_heading_to_document`. ALTERNATIVES: `inject_template_data` for template-driven table rendering.',
+            description: 'Appends a structured data table with Right-to-Left visual column order (`w:bidiVisual`), styled header row, alternating cell background shading, and borders to an existing Microsoft Word (.docx) document. Mutating tool that modifies `filePath` in-place. Behavior & Prerequisites: Target document at `filePath` must already exist; appends the table after the last existing element in the document; fails with FileOperationError if file is missing. Parameter Relationships: `columns` is an array of objects specifying `header` text and `widthPercent` (summing to 100%); `rows` is an array of row objects with `cells` string arrays matching column count and optional `backgroundColor` hex for custom row highlights; `isRtl` (default: true) sets table flow from right to left so column 1 renders on the far right. Returns a structured result envelope with table row and column counts. WHEN TO USE: Use to present tabular records, financial tables, comparative matrices, agendas, or structured datasets in Arabic documents. WHEN NOT TO USE: Do not use for simple single-line text or headings (use `add_paragraph_to_document` or `add_heading_to_document`). ALTERNATIVES: `inject_template_data` for populating table rows dynamically from template loops ({#items}).',
             annotations: {
                 readOnly: false,
                 destructive: false,
                 idempotent: false,
+                openWorld: false,
             },
             inputSchema: {
                 type: 'object',
@@ -170,15 +282,34 @@ function createWordMcpServer() {
                 },
                 required: ['filePath', 'columns', 'rows'],
             },
+            outputSchema: {
+                type: 'object',
+                properties: {
+                    status: { type: 'string', enum: ['success', 'partial', 'blocked', 'failed'] },
+                    summary: { type: 'string' },
+                    data: {
+                        type: 'object',
+                        properties: {
+                            filePath: { type: 'string' },
+                            rowCount: { type: 'number' },
+                            columnCount: { type: 'number' },
+                            isRtl: { type: 'boolean' },
+                        },
+                        required: ['filePath', 'rowCount', 'columnCount'],
+                    },
+                },
+                required: ['status', 'summary', 'data'],
+            },
         },
         {
             name: 'add_image_to_document',
             title: 'Add Image to Document',
-            description: 'Embeds a local PNG/JPEG image file into an existing Word document with specified display width (px), height (px), and alignment (right, center, left). Mutating tool that modifies `filePath` in-place. Requires both `filePath` (.docx) and `imagePath` (valid image file) to exist. Returns a structured result envelope. WHEN TO USE: Use to insert logos, figures, diagrams, signatures, or photos into a document. WHEN NOT TO USE: Do not use for vector drawing or raw XML shapes—use `modify_word_xml_element`. ALTERNATIVES: `add_paragraph_to_document` for text-only content.',
+            description: 'Embeds a local raster image file (PNG, JPEG, GIF) into an existing Microsoft Word (.docx) document with custom dimensions and alignment. Mutating tool that modifies `filePath` in-place by appending an inline drawing run. Behavior & Prerequisites: Both `filePath` (.docx file) and `imagePath` (readable image file on disk) must exist; image data is converted into WordprocessingML media archive elements (`word/media/imageX.png`). Fails with FileOperationError if either path is not found. Parameter Relationships: `widthPx` and `heightPx` specify layout dimensions in pixels (default: 300x200 px); `align` (\'right\', \'center\', \'left\') positions the image container relative to paragraph margins. Returns a structured result envelope with embedded image confirmation. WHEN TO USE: Use for inserting institutional logos, stamps, signature scans, charts, or photo illustrations into documents. WHEN NOT TO USE: Do not use for text formatting or tables (use `add_paragraph_to_document` or `add_table_to_document`). Do not use for unsupported file formats like SVG or PDF. ALTERNATIVES: `add_paragraph_to_document` for textual content.',
             annotations: {
                 readOnly: false,
                 destructive: false,
                 idempotent: false,
+                openWorld: false,
             },
             inputSchema: {
                 type: 'object',
@@ -191,15 +322,35 @@ function createWordMcpServer() {
                 },
                 required: ['filePath', 'imagePath'],
             },
+            outputSchema: {
+                type: 'object',
+                properties: {
+                    status: { type: 'string', enum: ['success', 'partial', 'blocked', 'failed'] },
+                    summary: { type: 'string' },
+                    data: {
+                        type: 'object',
+                        properties: {
+                            filePath: { type: 'string' },
+                            imagePath: { type: 'string' },
+                            widthPx: { type: 'number' },
+                            heightPx: { type: 'number' },
+                            align: { type: 'string' },
+                        },
+                        required: ['filePath', 'imagePath'],
+                    },
+                },
+                required: ['status', 'summary', 'data'],
+            },
         },
         {
             name: 'add_header_footer_to_document',
             title: 'Configure Header and Footer',
-            description: 'Configures document header and footer sections with custom text and Arabic page numbering (e.g., \'صفحة X من Y\'). Mutating tool that modifies `filePath` in-place. Overwrites existing headers/footers in the target document. Requires an existing `.docx` file. Supports RTL direction flags. Returns a structured result envelope. WHEN TO USE: Use to set up document-wide running headers, footers, confidentiality labels, or page numbers. WHEN NOT TO USE: Do not use to add body text or paragraphs—use `add_paragraph_to_document` instead. ALTERNATIVES: `modify_word_xml_element` for low-level header XML editing.',
+            description: 'Configures running header and footer sections on all pages of an existing Microsoft Word (.docx) document, with custom Arabic or English text and localized page numbering (\'صفحة X من Y\'). Mutating tool that modifies `filePath` in-place. Behavior & Side Effects: Overwrites any existing headers or footers in the target document section; requires `filePath` to already exist; fails with error if file is missing. Parameter Relationships: If `includePageNumbers` is true, footer automatically appends dynamic Arabic page fields (Current Page and Total Pages); `isRtl` sets Right-to-Left bidi text layout for both header and footer text runs. Returns a structured result envelope with updated document URI. WHEN TO USE: Use to apply organization letterheads, document classification labels (e.g. \'سري للغاية\'), document subject headers, or page number footers across pages. WHEN NOT TO USE: Do not use to insert body paragraphs or table content (use `add_paragraph_to_document` or `add_table_to_document`). ALTERNATIVES: `modify_word_xml_element` for raw XML header surgery.',
             annotations: {
                 readOnly: false,
                 destructive: false,
                 idempotent: false,
+                openWorld: false,
             },
             inputSchema: {
                 type: 'object',
@@ -212,35 +363,73 @@ function createWordMcpServer() {
                 },
                 required: ['filePath'],
             },
+            outputSchema: {
+                type: 'object',
+                properties: {
+                    status: { type: 'string', enum: ['success', 'partial', 'blocked', 'failed'] },
+                    summary: { type: 'string' },
+                    data: {
+                        type: 'object',
+                        properties: {
+                            filePath: { type: 'string' },
+                            headerText: { type: 'string' },
+                            footerText: { type: 'string' },
+                            includePageNumbers: { type: 'boolean' },
+                            isRtl: { type: 'boolean' },
+                        },
+                        required: ['filePath'],
+                    },
+                },
+                required: ['status', 'summary', 'data'],
+            },
         },
         {
             name: 'modify_word_xml_element',
             title: 'Modify WordprocessingML XML Element',
-            description: 'Performs direct string or tag replacement inside `word/document.xml` of a Word document for low-level custom modifications. Mutating tool that saves to `outputPath` if provided, or modifies `filePath` in-place. Disclosures: Incorrect or malformed XML injections can corrupt the `.docx` archive. Requires `filePath` to exist and contain `targetText`. Returns structured status and match count. WHEN TO USE: Use for precise low-level XML surgery, custom WordprocessingML tags, or replacing text fragments not reachable via high-level tools. WHEN NOT TO USE: Do not use for standard text additions—use `add_paragraph_to_document`. Do not use for multi-file XML archive surgery (styles, numbering)—use `decompress_and_modify_word_xml`. ALTERNATIVES: `decompress_and_modify_word_xml` for multi-file XML surgery, `inject_template_data` for template placeholders.',
+            description: 'Performs surgical string or WordprocessingML tag replacement inside `word/document.xml` of a Microsoft Word document for low-level customization. Mutating tool that modifies the input file in-place if `outputPath` is omitted, or writes to a new destination if `outputPath` is specified. Behavior & Side Effects: Directly modifies inner XML markup; requires target document to exist and contain `targetText`. Caution: injecting malformed or unclosed XML tags can corrupt the `.docx` archive. Parameter Relationships: `targetText` is matched verbatim across `word/document.xml`; `replacementText` can be plain text or valid XML tags (e.g. `<w:r>...</w:r>`). Returns a structured result envelope with output file URI and modified status. WHEN TO USE: Use for low-level XML patch operations, custom XML markup injection, or fixing text fragments not exposed by higher-level tools. WHEN NOT TO USE: Do not use for standard text additions (use `add_paragraph_to_document` or `add_heading_to_document`). Do not use for multi-file archive surgery across styles or numbering (use `decompress_and_modify_word_xml`). ALTERNATIVES: `add_paragraph_to_document` for regular text, `decompress_and_modify_word_xml` for multi-file XML surgery, `inject_template_data` for template placeholders.',
             annotations: {
                 readOnly: false,
                 destructive: true,
                 idempotent: false,
+                openWorld: false,
             },
             inputSchema: {
                 type: 'object',
                 properties: {
-                    filePath: { type: 'string', description: 'Path to target .docx file to inspect and modify.' },
+                    filePath: { type: 'string', description: 'Path to target .docx file to inspect and modify in-place.' },
                     targetText: { type: 'string', description: 'Exact text string or XML snippet to search for inside word/document.xml.' },
                     replacementText: { type: 'string', description: 'Replacement text string or WordprocessingML XML payload to inject.' },
                     outputPath: { type: 'string', description: 'Optional output .docx file path. If omitted, filePath is modified in-place.' },
                 },
                 required: ['filePath', 'targetText', 'replacementText'],
             },
+            outputSchema: {
+                type: 'object',
+                properties: {
+                    status: { type: 'string', enum: ['success', 'partial', 'blocked', 'failed'] },
+                    summary: { type: 'string' },
+                    data: {
+                        type: 'object',
+                        properties: {
+                            inputPath: { type: 'string' },
+                            outputPath: { type: 'string' },
+                            targetText: { type: 'string' },
+                        },
+                        required: ['inputPath', 'outputPath', 'targetText'],
+                    },
+                },
+                required: ['status', 'summary', 'data'],
+            },
         },
         {
             name: 'decompress_and_modify_word_xml',
             title: 'Decompress & Modify WordprocessingML XML',
-            description: 'Decompresses `.docx` ZIP archive and performs regex/pattern replacements inside any inner XML file (`word/document.xml`, `word/styles.xml`, `word/numbering.xml`, `word/settings.xml`, `docProps/core.xml`). Mutating tool that saves to `outputPath` or overwrites `filePath` in-place. Disclosures: Modifying schema tags requires XML knowledge; invalid XML syntax will corrupt document rendering. Returns output path and match count. WHEN TO USE: Use for deep archive surgery, altering document styles, font definitions, numbering rules, or settings across any inner XML file. WHEN NOT TO USE: Do not use for basic text insertion—use `add_paragraph_to_document`. ALTERNATIVES: `modify_word_xml_element` for single `document.xml` text replacements.',
+            description: 'Decompresses a Microsoft Word (.docx) ZIP archive in memory and applies regex or string pattern replacements across any inner XML file (`word/document.xml`, `word/styles.xml`, `word/numbering.xml`, `word/settings.xml`, `docProps/core.xml`), repacking the modified archive. Mutating tool that overwrites `filePath` in-place if `outputPath` is omitted, or saves to `outputPath` if provided. Behavior & Caution: Unpacks docx archive, searches for `searchPattern` within `targetXmlPath`, applies `replacementValue`, and recompresses with DEFLATE compression; fails with XmlManipulationError if target XML file or pattern is not found. Caution: injecting invalid XML syntax will corrupt document rendering. Parameter Relationships: `targetXmlPath` defaults to \'word/document.xml\' but can target any inner file; `searchPattern` is evaluated as a global regex; `replacementValue` is the replacement string. Returns structured result envelope with output file URI and matchCount. WHEN TO USE: Use for deep multi-file XML surgery, modifying style definitions in styles.xml, changing document-level bidi flags in settings.xml, or modifying numbering definitions. WHEN NOT TO USE: Do not use for basic text additions (use `add_paragraph_to_document`). ALTERNATIVES: `modify_word_xml_element` for simple document.xml replacements.',
             annotations: {
                 readOnly: false,
                 destructive: true,
                 idempotent: false,
+                openWorld: false,
             },
             inputSchema: {
                 type: 'object',
@@ -253,15 +442,33 @@ function createWordMcpServer() {
                 },
                 required: ['filePath', 'searchPattern', 'replacementValue'],
             },
+            outputSchema: {
+                type: 'object',
+                properties: {
+                    status: { type: 'string', enum: ['success', 'partial', 'blocked', 'failed'] },
+                    summary: { type: 'string' },
+                    data: {
+                        type: 'object',
+                        properties: {
+                            outputPath: { type: 'string' },
+                            modifiedXmlPath: { type: 'string' },
+                            matchCount: { type: 'number' },
+                        },
+                        required: ['outputPath', 'modifiedXmlPath', 'matchCount'],
+                    },
+                },
+                required: ['status', 'summary', 'data'],
+            },
         },
         {
             name: 'repair_arabic_text_formatting',
             title: 'Repair Arabic Text Formatting & Punctuation',
-            description: 'Pure computational text engine that inspects Arabic text strings and fixes typography defects: normalizes Alef forms (أ, إ, آ -> ا), Dotless Yeh (ى -> ي), converts Western (0-9) or Eastern (٠-٩) digits, fixes inverted parentheses/brackets in RTL contexts, trims extra whitespace, and strips tatweel/kashida characters. Non-mutating in-memory tool with zero side effects on filesystem. Returns detailed transformation list and repaired text string. WHEN TO USE: Use before adding Arabic text to documents to ensure clean typography, correct digit formatting, and un-inverted brackets. WHEN NOT TO USE: Do not use to edit .docx files directly—pass the repaired text output to `add_paragraph_to_document` or `add_heading_to_document`. ALTERNATIVES: `add_paragraph_to_document` for direct document insertion.',
+            description: 'Pure in-memory text engine that inspects Arabic text strings and repairs common typography defects: normalizes Alef forms (أ, إ, آ -> ا), Dotless Yeh (ى -> ي), converts Western (0-9) or Eastern (٠-٩) digits, fixes inverted parentheses and punctuation marks in mixed RTL/LTR contexts, trims redundant whitespace, and strips tatweel/kashida characters. Non-mutating pure computational tool with zero filesystem side effects. Behavior & Parameters: Accepts raw text input and boolean transformation flags; `fixInvertedPunctuation` (default: true) corrects brackets flipped by RTL rendering; `standardizeDigits` (\'eastern\'/\'western\'/\'none\') unifies numeral format; `trimExtraSpaces` (default: true) removes duplicate blanks; `normalizeAlef` and `normalizeYeh` unify letter variants; `removeKashida` removes tatweel. Returns structured result envelope with repairedText string, originalText, and transformationsApplied array. WHEN TO USE: Use to sanitize and format Arabic text strings before inserting them into Word documents or databases. WHEN NOT TO USE: Do not use to edit .docx files directly on disk (use `add_paragraph_to_document` or `modify_word_xml_element` with the repaired text). ALTERNATIVES: `add_paragraph_to_document` for inserting text into documents.',
             annotations: {
                 readOnly: true,
                 destructive: false,
                 idempotent: true,
+                openWorld: false,
             },
             inputSchema: {
                 type: 'object',
@@ -276,15 +483,34 @@ function createWordMcpServer() {
                 },
                 required: ['text'],
             },
+            outputSchema: {
+                type: 'object',
+                properties: {
+                    status: { type: 'string', enum: ['success', 'partial', 'blocked', 'failed'] },
+                    summary: { type: 'string' },
+                    data: {
+                        type: 'object',
+                        properties: {
+                            originalText: { type: 'string' },
+                            repairedText: { type: 'string' },
+                            transformationsApplied: { type: 'array', items: { type: 'string' } },
+                            digitFormat: { type: 'string' },
+                        },
+                        required: ['originalText', 'repairedText', 'transformationsApplied'],
+                    },
+                },
+                required: ['status', 'summary', 'data'],
+            },
         },
         {
             name: 'inject_template_data',
             title: 'Inject Data into Docx Template',
-            description: 'Merges JSON key-value data object into a `.docx` template file containing placeholders (e.g. `{name}`, `{#items}`). Mutating tool that writes the generated document to `outputPath` (does NOT overwrite the input `templatePath`). Requires `templatePath` to exist and `outputPath` to be specified. Disclosures: Missing template tags are left unreplaced; invalid JSON payload causes merge failure. Returns a structured result envelope with output file URI. WHEN TO USE: Use for automated batch document generation, contract filling, invoice generation, or report generation from pre-designed `.docx` templates. WHEN NOT TO USE: Do not use to build documents from scratch—use `create_word_document` and content tools. ALTERNATIVES: `resolve_and_execute_document_intent` for AI-driven generation.',
+            description: 'Populates a pre-designed Microsoft Word (.docx) template file containing placeholder tags with JSON key-value data, writing the generated document to a new output path. Mutating tool that generates a new file at `outputPath` without modifying the source `templatePath`. Behavior & Side Effects: Reads `templatePath`, renders variables (`{key}`), conditionals (`{#condition}...{/}`), and loops (`{#items}...{/}`), and writes the result to `outputPath` (overwriting `outputPath` if it exists); leaves undefined tags blank; fails with error if `templatePath` is missing or has invalid docxtemplater syntax. Parameter Relationships: `templatePath` is the source .docx containing `{tags}`; `data` is a JSON object where keys match template tag names and array values populate table/list loops; `outputPath` is the destination file path. Returns a structured result envelope with output file URI and injected key count. WHEN TO USE: Use for automated document generation from standardized corporate or legal templates (e.g. contracts, invoices, certificates, form letters). WHEN NOT TO USE: Do not use to build documents from scratch without an existing template (use `create_word_document` or `resolve_and_execute_document_intent`). ALTERNATIVES: `resolve_and_execute_document_intent` for generative document creation without a template.',
             annotations: {
                 readOnly: false,
                 destructive: false,
                 idempotent: false,
+                openWorld: false,
             },
             inputSchema: {
                 type: 'object',
@@ -295,15 +521,33 @@ function createWordMcpServer() {
                 },
                 required: ['templatePath', 'data', 'outputPath'],
             },
+            outputSchema: {
+                type: 'object',
+                properties: {
+                    status: { type: 'string', enum: ['success', 'partial', 'blocked', 'failed'] },
+                    summary: { type: 'string' },
+                    data: {
+                        type: 'object',
+                        properties: {
+                            templatePath: { type: 'string' },
+                            outputPath: { type: 'string' },
+                            injectedKeys: { type: 'array', items: { type: 'string' } },
+                        },
+                        required: ['templatePath', 'outputPath', 'injectedKeys'],
+                    },
+                },
+                required: ['status', 'summary', 'data'],
+            },
         },
         {
             name: 'convert_word_to_markdown',
             title: 'Convert Docx to Markdown',
-            description: 'Extracts formatted headings (H1-H3) and body paragraph text from a `.docx` document and converts them into structured Markdown text. Read-only tool with zero side effects on target file. Fails if the file does not exist or is corrupted. Disclosures: Extracts plain text and heading hierarchy; images and complex table borders are omitted in Markdown representation. Returns structured envelope containing full Markdown string. WHEN TO USE: Use when reading, summarizing, or analyzing the textual contents of a Word document within an AI chat session. WHEN NOT TO USE: Do not use to inspect document metadata, table counts, or font sets—use `inspect_word_document` instead. ALTERNATIVES: `inspect_word_document` for structural metadata.',
+            description: 'Extracts headings (H1-H3) and body paragraph text from an existing Microsoft Word (.docx) document and converts them into a clean, formatted Markdown string in memory. Non-mutating read-only tool with zero filesystem side effects (does not modify input file or create output files). Behavior & Scope: Unpacks `word/document.xml` in memory, translates heading runs to `#`, `##`, `###` and body runs to text blocks separated by double newlines; tables and images are omitted in the markdown string. Fails with FileOperationError if `filePath` is missing or not a valid docx archive. Returns structured result envelope with data.markdown string and character count. WHEN TO USE: Use when an AI assistant or human needs to read, summarize, query, or audit the text content of a Word document. WHEN NOT TO USE: Do not use when structural metadata, font names, image counts, or table dimensions are needed (use `inspect_word_document` instead). Do not use to modify documents. ALTERNATIVES: `inspect_word_document` for full structural inspection.',
             annotations: {
                 readOnly: true,
                 destructive: false,
                 idempotent: true,
+                openWorld: false,
             },
             inputSchema: {
                 type: 'object',
@@ -312,15 +556,33 @@ function createWordMcpServer() {
                 },
                 required: ['filePath'],
             },
+            outputSchema: {
+                type: 'object',
+                properties: {
+                    status: { type: 'string', enum: ['success', 'partial', 'blocked', 'failed'] },
+                    summary: { type: 'string' },
+                    data: {
+                        type: 'object',
+                        properties: {
+                            filePath: { type: 'string' },
+                            markdown: { type: 'string' },
+                            characterCount: { type: 'number' },
+                        },
+                        required: ['filePath', 'markdown', 'characterCount'],
+                    },
+                },
+                required: ['status', 'summary', 'data'],
+            },
         },
         {
             name: 'resolve_and_execute_document_intent',
             title: 'Auto-Resolve Natural Language Intent & Build Document',
-            description: 'Single-shot automated document builder that parses high-level natural language prompts (e.g. \'أنشئ خطاب رسمي موجه لـ...\') and generates a complete, professionally formatted Arabic Word document. Mutating tool that creates or overwrites `outputPath` (or generates a timestamped filename). Returns document archetype, metadata, and output file URI. WHEN TO USE: Use when the user requests an entire document in natural language without specifying step-by-step formatting commands. WHEN NOT TO USE: Do not use for granular, step-by-step edits to an existing document—use specific tools like `add_paragraph_to_document` or `add_table_to_document`. ALTERNATIVES: `create_word_document` followed by manual content addition tools.',
+            description: 'Single-shot autonomous document generator that interprets high-level natural language requests (e.g. \'أنشئ خطاب رسمي موجه لوزارة التربية...\') and automatically resolves document archetype, typography hierarchy, headings, paragraphs, and tables, producing a complete styled Arabic Word document in a single execution. Mutating file-creation tool. Behavior & Side Effects: Analyzes prompt intent, creates a new `.docx` file at `outputPath` (or generates a timestamped filename if omitted), applies Arabic typography rules (Amiri font, RTL direction, line spacing 1.25x), and writes the file to disk. Returns structured result envelope with document archetype, metadata, and output file URI. WHEN TO USE: Use when the user requests an entire document in natural language without providing step-by-step formatting instructions. WHEN NOT TO USE: Do not use for granular single-element edits to existing documents (use `add_paragraph_to_document`, `add_table_to_document`, etc.). ALTERNATIVES: `create_word_document` followed by manual content addition tools.',
             annotations: {
                 readOnly: false,
                 destructive: true,
                 idempotent: false,
+                openWorld: false,
             },
             inputSchema: {
                 type: 'object',
@@ -333,6 +595,26 @@ function createWordMcpServer() {
                     fontFamily: { type: 'string', description: 'Optional font family preference.' },
                 },
                 required: ['prompt'],
+            },
+            outputSchema: {
+                type: 'object',
+                properties: {
+                    status: { type: 'string', enum: ['success', 'partial', 'blocked', 'failed'] },
+                    summary: { type: 'string' },
+                    data: {
+                        type: 'object',
+                        properties: {
+                            outputPath: { type: 'string' },
+                            archetype: { type: 'string' },
+                            title: { type: 'string' },
+                            recipient: { type: 'string' },
+                            author: { type: 'string' },
+                            subject: { type: 'string' },
+                        },
+                        required: ['outputPath', 'archetype', 'title'],
+                    },
+                },
+                required: ['status', 'summary', 'data'],
             },
         },
     ];

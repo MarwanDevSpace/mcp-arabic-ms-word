@@ -9,14 +9,14 @@ const docx_builder_js_1 = require("../domain/docx_builder.js");
 const index_js_1 = require("../contracts/index.js");
 const logger_js_1 = require("../core/logger.js");
 exports.addHeadingSchema = zod_1.z.object({
-    filePath: zod_1.z.string().describe('Path to the .docx file'),
-    text: zod_1.z.string().describe('Heading text content'),
-    level: zod_1.z.number().int().min(1).max(6).optional().default(1).describe('Heading level (1=H1, 2=H2, etc.)'),
-    fontFamily: zod_1.z.string().optional().describe('Font name'),
-    fontSizePt: zod_1.z.number().optional().describe('Heading size in pt'),
-    colorHex: zod_1.z.string().optional().default('1F4E78').describe('Heading text color hex'),
-    alignment: zod_1.z.enum(['right', 'left', 'center', 'justify']).optional().default('right').describe('Heading alignment'),
-    direction: zod_1.z.enum(['rtl', 'ltr']).optional().default('rtl').describe('Text direction'),
+    filePath: zod_1.z.string().describe('Path to target .docx file to modify in-place'),
+    text: zod_1.z.string().describe('Heading text content string'),
+    level: zod_1.z.number().int().min(1).max(6).optional().default(1).describe('Heading structural level 1 to 6 (1 for main H1 title, 2 for section H2, etc.)'),
+    fontFamily: zod_1.z.string().optional().describe('Font family name (e.g. Amiri, Cairo). Defaults to document default font if omitted'),
+    fontSizePt: zod_1.z.number().optional().describe('Font size in points (e.g. 22 for H1, 18 for H2). Calculated automatically if omitted'),
+    colorHex: zod_1.z.string().optional().default('1F4E78').describe('Six-character hex color code without leading # (e.g. 1F4E78 for executive dark blue)'),
+    alignment: zod_1.z.enum(['right', 'left', 'center', 'justify']).optional().default('right').describe('Horizontal alignment (right, left, center, justify)'),
+    direction: zod_1.z.enum(['rtl', 'ltr']).optional().default('rtl').describe('Text direction flag (rtl for Right-to-Left Arabic, ltr for English)'),
 });
 async function handleAddHeading(input) {
     try {

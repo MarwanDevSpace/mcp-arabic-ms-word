@@ -17,5 +17,10 @@ export declare const modifyXmlElementSchema: z.ZodObject<{
     outputPath?: string | undefined;
 }>;
 export type ModifyXmlElementInput = z.input<typeof modifyXmlElementSchema>;
-export declare function handleModifyXmlElement(input: ModifyXmlElementInput): Promise<StandardResultEnvelope>;
+export interface ModifyXmlElementOutput {
+    inputPath: string;
+    outputPath: string;
+    targetText: string;
+}
+export declare function handleModifyXmlElement(input: ModifyXmlElementInput): Promise<StandardResultEnvelope<ModifyXmlElementOutput>>;
 //# sourceMappingURL=modify_xml_element.d.ts.map

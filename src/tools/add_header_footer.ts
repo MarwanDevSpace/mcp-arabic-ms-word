@@ -6,18 +6,25 @@ import { createSuccessEnvelope, createErrorEnvelope, StandardResultEnvelope } fr
 import { Logger } from '../core/logger.js';
 
 export const addHeaderFooterSchema = z.object({
-  filePath: z.string().describe('Path to the .docx file'),
-  headerText: z.string().optional().describe('Text to place in document header'),
-  footerText: z.string().optional().describe('Text to place in document footer'),
-  includePageNumbers: z.boolean().optional().default(true).describe('Include page numbers in footer'),
-  isRtl: z.boolean().optional().default(true).describe('RTL direction'),
+  filePath: z.string().describe('Path to target .docx file to configure in-place'),
+  headerText: z.string().optional().describe('Text string to place in running document header'),
+  footerText: z.string().optional().describe('Text string to place in running document footer'),
+  includePageNumbers: z.boolean().optional().default(true).describe('If true, appends Arabic formatted page numbers (صفحة X من Y) to footer'),
+  isRtl: z.boolean().optional().default(true).describe('Set to true for Right-to-Left layout in header and footer sections'),
 });
 
 export type AddHeaderFooterInput = z.input<typeof addHeaderFooterSchema>;
 
+export interface AddHeaderFooterOutput {
+  filePath: string;
+  headerText?: string;
+  footerText?: string;
+  includePageNumbers: boolean;
+}
+
 export async function handleAddHeaderFooter(
   input: AddHeaderFooterInput
-): Promise<StandardResultEnvelope> {
+): Promise<StandardResultEnvelope<AddHeaderFooterOutput>> {
   try {
     const validated = addHeaderFooterSchema.parse(input);
     const resolvedPath = resolveWorkspacePath(validated.filePath);
@@ -54,6 +61,6 @@ export async function handleAddHeaderFooter(
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     Logger.error(`Failed to update header/footer: ${msg}`);
-    return createErrorEnvelope(`Error updating header/footer: ${msg}`);
+    return createErrorEnvelope(`Error updating header/footer: ${msg}`) as StandardResultEnvelope<AddHeaderFooterOutput>;
   }
 }

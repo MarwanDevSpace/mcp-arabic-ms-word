@@ -29,5 +29,10 @@ export declare const addHeadingSchema: z.ZodObject<{
     level?: number | undefined;
 }>;
 export type AddHeadingInput = z.input<typeof addHeadingSchema>;
-export declare function handleAddHeading(input: AddHeadingInput): Promise<StandardResultEnvelope>;
+export interface AddHeadingOutput {
+    filePath: string;
+    headingText: string;
+    level: number;
+}
+export declare function handleAddHeading(input: AddHeadingInput): Promise<StandardResultEnvelope<AddHeadingOutput>>;
 //# sourceMappingURL=add_heading.d.ts.map

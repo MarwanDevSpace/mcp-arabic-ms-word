@@ -4,15 +4,22 @@ All notable changes to **mcp-arabic-ms-word** will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-08-13
+
+### Enhanced
+- **Full Glama 5.0/5.0 Quality Optimization across all 13 Tools**:
+  - Registered formal `outputSchema` definitions on all 13 tools providing typed return shape specifications.
+  - Added structural `annotations` (`readOnly`, `destructive`, `idempotent`, `openWorld`) to each tool.
+  - Enriched behavioral disclosures covering side effects, in-place vs new file creation, overwrite rules, error conditions, and return envelope format.
+  - Added explicit usage guidelines for every tool ("WHEN TO USE", "WHEN NOT TO USE", and "ALTERNATIVES").
+  - Added 100% parameter coverage with usage intent, formatting rules (Hex colors, pt sizes, cm units), and cross-parameter relationships.
+- Published release `v1.2.1` on npm Registry and GitHub Releases.
+
 ## [1.2.0] - 2026-08-13
 
 ### Added & Improved
-- **Glama Quality Optimization (Tier A / 5.0 Score Plan)**:
-  - Added explicit tool `annotations` (`readOnly`, `destructive`, `idempotent`) across all 13 MCP tools.
-  - Enriched behavioral disclosures (side effects, in-place vs output file creation, error behavior, and return envelope format).
-  - Added explicit usage guidelines for every tool ("WHEN TO USE", "WHEN NOT TO USE", and "ALTERNATIVES").
-  - Extended parameter descriptions with complete intent, constraints, and valid ranges.
-  - Updated tool call handlers to return structured MCP content arrays and `structuredContent` payload according to MCP 2026 specification.
+- Added tool `annotations` across all 13 MCP tools.
+- Enriched behavioral disclosures.
 - Published release `v1.2.0` on npm Registry and GitHub Releases.
 
 ## [1.1.3] - 2026-08-13

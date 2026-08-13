@@ -6,32 +6,39 @@ import { createSuccessEnvelope, createErrorEnvelope, StandardResultEnvelope } fr
 import { Logger } from '../core/logger.js';
 
 export const addTableSchema = z.object({
-  filePath: z.string().describe('Path to the .docx file'),
+  filePath: z.string().describe('Path to target .docx file to modify in-place'),
   columns: z
     .array(
       z.object({
-        header: z.string().describe('Column header text'),
-        widthPercent: z.number().optional().describe('Column width percentage (0-100)'),
+        header: z.string().describe('Column header text label'),
+        widthPercent: z.number().optional().describe('Column width percentage relative to table width (0-100)'),
       })
     )
     .min(1)
-    .describe('Array of column header definitions'),
+    .describe('Array of column definitions with header label and width percentage'),
   rows: z
     .array(
       z.object({
-        cells: z.array(z.string()).describe('Array of cell values for this row'),
-        backgroundColor: z.string().optional().describe('Custom row background hex color'),
+        cells: z.array(z.string()).describe('Cell text values matching column count'),
+        backgroundColor: z.string().optional().describe('Optional six-character hex color code for row background shading'),
       })
     )
-    .describe('Array of row data'),
-  isRtl: z.boolean().optional().default(true).describe('RTL table direction (w:bidiVisual)'),
+    .describe('Array of row objects containing cell values array and optional background color hex'),
+  isRtl: z.boolean().optional().default(true).describe('Set to true to apply Right-to-Left visual column order (w:bidiVisual)'),
 });
 
 export type AddTableInput = z.input<typeof addTableSchema>;
 
+export interface AddTableOutput {
+  filePath: string;
+  columnsCount: number;
+  rowsCount: number;
+  isRtl: boolean;
+}
+
 export async function handleAddTable(
   input: AddTableInput
-): Promise<StandardResultEnvelope> {
+): Promise<StandardResultEnvelope<AddTableOutput>> {
   try {
     const validated = addTableSchema.parse(input);
     const resolvedPath = resolveWorkspacePath(validated.filePath);
@@ -62,6 +69,6 @@ export async function handleAddTable(
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     Logger.error(`Failed to add table: ${msg}`);
-    return createErrorEnvelope(`Error adding table: ${msg}`);
+    return createErrorEnvelope(`Error adding table: ${msg}`) as StandardResultEnvelope<AddTableOutput>;
   }
 }

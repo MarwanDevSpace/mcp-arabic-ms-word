@@ -47,5 +47,11 @@ export declare const addTableSchema: z.ZodObject<{
     isRtl?: boolean | undefined;
 }>;
 export type AddTableInput = z.input<typeof addTableSchema>;
-export declare function handleAddTable(input: AddTableInput): Promise<StandardResultEnvelope>;
+export interface AddTableOutput {
+    filePath: string;
+    columnsCount: number;
+    rowsCount: number;
+    isRtl: boolean;
+}
+export declare function handleAddTable(input: AddTableInput): Promise<StandardResultEnvelope<AddTableOutput>>;
 //# sourceMappingURL=add_table.d.ts.map

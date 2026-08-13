@@ -44,5 +44,11 @@ export declare const addParagraphSchema: z.ZodObject<{
     underline?: boolean | undefined;
 }>;
 export type AddParagraphInput = z.input<typeof addParagraphSchema>;
-export declare function handleAddParagraph(input: AddParagraphInput): Promise<StandardResultEnvelope>;
+export interface AddParagraphOutput {
+    filePath: string;
+    textPreview: string;
+    alignment: string;
+    direction: string;
+}
+export declare function handleAddParagraph(input: AddParagraphInput): Promise<StandardResultEnvelope<AddParagraphOutput>>;
 //# sourceMappingURL=add_paragraph.d.ts.map

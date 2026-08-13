@@ -9,11 +9,11 @@ const docx_builder_js_1 = require("../domain/docx_builder.js");
 const index_js_1 = require("../contracts/index.js");
 const logger_js_1 = require("../core/logger.js");
 exports.addHeaderFooterSchema = zod_1.z.object({
-    filePath: zod_1.z.string().describe('Path to the .docx file'),
-    headerText: zod_1.z.string().optional().describe('Text to place in document header'),
-    footerText: zod_1.z.string().optional().describe('Text to place in document footer'),
-    includePageNumbers: zod_1.z.boolean().optional().default(true).describe('Include page numbers in footer'),
-    isRtl: zod_1.z.boolean().optional().default(true).describe('RTL direction'),
+    filePath: zod_1.z.string().describe('Path to target .docx file to configure in-place'),
+    headerText: zod_1.z.string().optional().describe('Text string to place in running document header'),
+    footerText: zod_1.z.string().optional().describe('Text string to place in running document footer'),
+    includePageNumbers: zod_1.z.boolean().optional().default(true).describe('If true, appends Arabic formatted page numbers (صفحة X من Y) to footer'),
+    isRtl: zod_1.z.boolean().optional().default(true).describe('Set to true for Right-to-Left layout in header and footer sections'),
 });
 async function handleAddHeaderFooter(input) {
     try {

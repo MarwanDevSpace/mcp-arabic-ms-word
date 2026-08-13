@@ -9,11 +9,11 @@ const docx_builder_js_1 = require("../domain/docx_builder.js");
 const index_js_1 = require("../contracts/index.js");
 const logger_js_1 = require("../core/logger.js");
 exports.addImageSchema = zod_1.z.object({
-    filePath: zod_1.z.string().describe('Path to the .docx file'),
-    imagePath: zod_1.z.string().describe('Path to the PNG/JPEG image file'),
-    widthPx: zod_1.z.number().optional().default(300).describe('Image display width in pixels'),
-    heightPx: zod_1.z.number().optional().default(200).describe('Image display height in pixels'),
-    align: zod_1.z.enum(['right', 'center', 'left']).optional().default('center').describe('Image alignment'),
+    filePath: zod_1.z.string().describe('Path to target .docx file to modify in-place'),
+    imagePath: zod_1.z.string().describe('Absolute or workspace path to valid input image file (PNG, JPEG, GIF)'),
+    widthPx: zod_1.z.number().optional().default(300).describe('Display width in pixels inside document layout (default: 300)'),
+    heightPx: zod_1.z.number().optional().default(200).describe('Display height in pixels inside document layout (default: 200)'),
+    align: zod_1.z.enum(['right', 'center', 'left']).optional().default('center').describe('Horizontal image positioning relative to text margins (right, center, left)'),
 });
 async function handleAddImage(input) {
     try {

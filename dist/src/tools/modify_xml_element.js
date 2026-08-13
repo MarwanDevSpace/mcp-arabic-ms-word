@@ -8,10 +8,10 @@ const xml_engine_js_1 = require("../domain/xml_engine.js");
 const index_js_1 = require("../contracts/index.js");
 const logger_js_1 = require("../core/logger.js");
 exports.modifyXmlElementSchema = zod_1.z.object({
-    filePath: zod_1.z.string().describe('Path to the .docx file'),
-    targetText: zod_1.z.string().describe('Target text or XML string to replace in document.xml'),
-    replacementText: zod_1.z.string().describe('New replacement text or XML payload'),
-    outputPath: zod_1.z.string().optional().describe('Optional output path. If omitted, overwrites input file'),
+    filePath: zod_1.z.string().describe('Path to target .docx file to inspect and modify in-place'),
+    targetText: zod_1.z.string().describe('Exact text string or XML snippet to search for inside word/document.xml'),
+    replacementText: zod_1.z.string().describe('Replacement text string or WordprocessingML XML payload to inject'),
+    outputPath: zod_1.z.string().optional().describe('Optional output .docx file path. If omitted, filePath is modified in-place'),
 });
 async function handleModifyXmlElement(input) {
     try {
@@ -27,7 +27,7 @@ async function handleModifyXmlElement(input) {
             inputPath: resolvedInputPath,
             outputPath: finalPath,
             targetText: validated.targetText,
-        }, [{ label: 'Modified Docx', uri: `file:///${finalPath.replace(/\\/g, '/')}` }]);
+        }, [{ label: 'Modified Docx', uri: `file:///${finalPath.replace(/\\/g, '/')}` }], [`Caution: Verify document rendering integrity if raw XML tags were injected.`]);
     }
     catch (err) {
         const msg = err instanceof Error ? err.message : String(err);

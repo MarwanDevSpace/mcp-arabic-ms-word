@@ -6,26 +6,33 @@ import { createSuccessEnvelope, createErrorEnvelope, StandardResultEnvelope } fr
 import { Logger } from '../core/logger.js';
 
 export const addParagraphSchema = z.object({
-  filePath: z.string().describe('Path to the .docx file to append paragraph to'),
-  text: z.string().describe('Paragraph text content (Arabic/English)'),
-  fontFamily: z.string().optional().describe('Font name (e.g. Amiri, Traditional Arabic, Cairo, Calibri)'),
-  fontSizePt: z.number().optional().default(14).describe('Font size in points'),
-  direction: z.enum(['rtl', 'ltr']).optional().default('rtl').describe('Text direction'),
-  alignment: z.enum(['right', 'left', 'center', 'justify', 'kashida']).optional().default('right').describe('Paragraph alignment'),
-  lineSpacingMultiplier: z.number().optional().default(1.25).describe('Line spacing (e.g., 1.0, 1.25, 1.5, 2.0)'),
-  spaceBeforePt: z.number().optional().default(0).describe('Spacing before paragraph in pt'),
-  spaceAfterPt: z.number().optional().default(6).describe('Spacing after paragraph in pt'),
-  colorHex: z.string().optional().default('000000').describe('Text color hex code'),
-  bold: z.boolean().optional().default(false).describe('Bold font weight'),
-  italic: z.boolean().optional().default(false).describe('Italic font style'),
-  underline: z.boolean().optional().default(false).describe('Underline text'),
+  filePath: z.string().describe('Path to target .docx file to modify in-place'),
+  text: z.string().describe('Paragraph text content string'),
+  fontFamily: z.string().optional().describe('Font family name (e.g. Amiri, Cairo, Traditional Arabic)'),
+  fontSizePt: z.number().optional().default(14).describe('Font size in points (default 14 pt)'),
+  direction: z.enum(['rtl', 'ltr']).optional().default('rtl').describe('Text direction (rtl for Right-to-Left Arabic, ltr for English)'),
+  alignment: z.enum(['right', 'left', 'center', 'justify', 'kashida']).optional().default('right').describe('Text alignment (right, left, center, justify, or kashida for Arabic justification)'),
+  lineSpacingMultiplier: z.number().optional().default(1.25).describe('Line spacing height multiplier (default 1.25 for Arabic diacritics readability)'),
+  spaceBeforePt: z.number().optional().default(0).describe('Spacing before paragraph in points'),
+  spaceAfterPt: z.number().optional().default(6).describe('Spacing after paragraph in points (default 6 pt)'),
+  colorHex: z.string().optional().default('000000').describe('Six-character hex color code without leading # (default 000000)'),
+  bold: z.boolean().optional().default(false).describe('Set to true for bold text weight'),
+  italic: z.boolean().optional().default(false).describe('Set to true for italic style'),
+  underline: z.boolean().optional().default(false).describe('Set to true for underlined text'),
 });
 
 export type AddParagraphInput = z.input<typeof addParagraphSchema>;
 
+export interface AddParagraphOutput {
+  filePath: string;
+  textPreview: string;
+  alignment: string;
+  direction: string;
+}
+
 export async function handleAddParagraph(
   input: AddParagraphInput
-): Promise<StandardResultEnvelope> {
+): Promise<StandardResultEnvelope<AddParagraphOutput>> {
   try {
     const validated = addParagraphSchema.parse(input);
     const resolvedPath = resolveWorkspacePath(validated.filePath);
@@ -69,6 +76,6 @@ export async function handleAddParagraph(
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     Logger.error(`Failed to add paragraph: ${msg}`);
-    return createErrorEnvelope(`Error adding paragraph: ${msg}`);
+    return createErrorEnvelope(`Error adding paragraph: ${msg}`) as StandardResultEnvelope<AddParagraphOutput>;
   }
 }
