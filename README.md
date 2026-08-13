@@ -9,7 +9,7 @@
 [![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![MCP Protocol](https://img.shields.io/badge/MCP-Protocol--v1.0-purple.svg)](https://modelcontextprotocol.io)
 [![Author](https://img.shields.io/badge/Author-MarwanDevSpace-orange.svg)](https://github.com/MarwanDevSpace)
-[![Glama MCP](https://glama.ai/mcp/servers/badge)](https://glama.ai/mcp/servers/@MarwanDevSpace/mcp-arabic-ms-word)
+[![mcp-arabic-ms-word MCP server](https://glama.ai/mcp/servers/MarwanDevSpace/mcp-arabic-ms-word/badges/score.svg)](https://glama.ai/mcp/servers/MarwanDevSpace/mcp-arabic-ms-word)
 
 **خادم بروتوكول MCP المتقدم (WordMasterAgent) المتخصص في إنشاء وتنسيق وحقن وفحص وإصلاح نصوص وتفكيك شفرات XML لمستندات Microsoft Word بدعم كامل ودقيق للغة العربية والاتجاه من اليمين إلى اليسار (RTL).**
 
