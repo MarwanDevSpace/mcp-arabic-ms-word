@@ -1,42 +1,6 @@
 {
-  "$schema": "https://glama.ai/mcp/schema.json",
-  "name": "mcp-arabic-ms-word",
-  "title": "Arabic Microsoft Word MCP Server (WordMasterAgent)",
-  "description": "High-precision Arabic Microsoft Word MCP server for docx creation, inspection, RTL styling, Arabic text repair, XML decompression & surgery, and template processing.",
-  "vendor": "MarwanDevSpace",
-  "license": "MIT",
-  "homepage": "https://github.com/MarwanDevSpace/mcp-arabic-ms-word",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/MarwanDevSpace/mcp-arabic-ms-word"
-  },
-  "bugs": {
-    "url": "https://github.com/MarwanDevSpace/mcp-arabic-ms-word/issues"
-  },
-  "keywords": [
-    "mcp",
-    "model-context-protocol",
-    "arabic",
-    "ms-word",
-    "docx",
-    "rtl",
-    "typography",
-    "text-repair",
-    "xml-decompression",
-    "xml-surgery",
-    "wordmasteragent"
-  ],
-  "transport": {
-    "type": "stdio",
-    "command": "npx",
-    "args": [
-      "-y",
-      "mcp-arabic-ms-word@latest"
-    ]
-  },
-  "capabilities": {
-    "tools": true,
-    "resources": true,
-    "prompts": true
-  }
+  "$schema": "https://glama.ai/mcp/schemas/server.json",
+  "maintainers": [
+    "MarwanDevSpace"
+  ]
 }
