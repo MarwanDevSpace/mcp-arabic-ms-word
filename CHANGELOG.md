@@ -4,21 +4,40 @@ All notable changes to **mcp-arabic-ms-word** will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-08-14
+
+### Added
+- **New Tool**: `enforce_arabic_bidi_and_typography`
+  - Eliminates BiDi/RTL heading drift by strictly enforcing `<w:jc w:val="right"/>` without `<w:bidi/>` in heading `pPr`.
+  - Enforces `<w:keepNext/>` and `<w:widowControl/>` on all heading levels to eliminate orphan headings.
+  - Enforces `<w:bidi/>` and `<w:jc w:val="both"/>` on Arabic body paragraphs.
+  - Wraps Quranic verses and Hadiths with `<w:keepLines/>` to prevent them from splitting across page breaks.
+  - Injects dynamic Arabic page numbering into section footers.
+  - Isolates English/Latin sections with strict left alignment (`<w:jc w:val="left"/>`).
+- **New Tool**: `audit_and_render_document_pages`
+  - Converts Word documents to PDF and renders all pages as high-resolution PNG images in a dedicated `Pages/` subfolder.
+  - Performs automated layout defect diagnostics (orphan headings, split verses, trailing blank lines, layout integrity score).
+- **Clean Workspace Protocol**:
+  - Eliminates temporary script pollution in user root directories.
+  - Enforces internal MCP server execution and standardized workspace structure (`document.docx`, `document.pdf`, `Pages/`).
+- **New Skills**:
+  - [bidi-typography-surgeon](.agents/skills/bidi-typography-surgeon/SKILL.md)
+  - [visual-page-auditor](.agents/skills/visual-page-auditor/SKILL.md)
+
 ## [1.2.1] - 2026-08-13
 
 ### Enhanced
-- **Full Glama 5.0/5.0 Quality Optimization across all 13 Tools**:
-  - Registered formal `outputSchema` definitions on all 13 tools providing typed return shape specifications.
+- **Full Glama 5.0/5.0 Quality Optimization across all Tools**:
+  - Registered formal `outputSchema` definitions on all tools providing typed return shape specifications.
   - Added structural `annotations` (`readOnly`, `destructive`, `idempotent`, `openWorld`) to each tool.
   - Enriched behavioral disclosures covering side effects, in-place vs new file creation, overwrite rules, error conditions, and return envelope format.
   - Added explicit usage guidelines for every tool ("WHEN TO USE", "WHEN NOT TO USE", and "ALTERNATIVES").
   - Added 100% parameter coverage with usage intent, formatting rules (Hex colors, pt sizes, cm units), and cross-parameter relationships.
-- Published release `v1.2.1` on npm Registry and GitHub Releases.
 
 ## [1.2.0] - 2026-08-13
 
 ### Added & Improved
-- Added tool `annotations` across all 13 MCP tools.
+- Added tool `annotations` across all tools.
 - Enriched behavioral disclosures.
 - Published release `v1.2.0` on npm Registry and GitHub Releases.
 

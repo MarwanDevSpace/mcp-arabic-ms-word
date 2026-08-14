@@ -1,7 +1,7 @@
 {
   "name": "mcp-arabic-ms-word",
-  "version": "1.2.1",
-  "description": "High-precision Arabic Microsoft Word MCP server for docx creation, inspection, RTL styling, text repair, XML decompression & surgery, and template processing",
+  "version": "1.3.0",
+  "description": "High-precision Arabic Microsoft Word MCP server for docx creation, inspection, RTL styling, text repair, XML decompression & surgery, BiDi OpenXML surgery, visual page auditing (Pages/), and template processing",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
@@ -35,6 +35,8 @@
     "text-repair",
     "xml-decompression",
     "xml-surgery",
+    "bidi-surgery",
+    "page-preview",
     "wordmasteragent",
     "glama"
   ],

@@ -11,7 +11,7 @@
 [![Author](https://img.shields.io/badge/Author-MarwanDevSpace-orange.svg)](https://github.com/MarwanDevSpace)
 [![mcp-arabic-ms-word MCP server](https://glama.ai/mcp/servers/MarwanDevSpace/mcp-arabic-ms-word/badges/score.svg)](https://glama.ai/mcp/servers/MarwanDevSpace/mcp-arabic-ms-word)
 
-**خادم بروتوكول MCP المتقدم (WordMasterAgent) المتخصص في إنشاء وتنسيق وحقن وفحص وإصلاح نصوص وتفكيك شفرات XML لمستندات Microsoft Word بدعم كامل ودقيق للغة العربية والاتجاه من اليمين إلى اليسار (RTL).**
+**خادم بروتوكول MCP المتقدم (WordMasterAgent) المتخصص في إنشاء وتنسيق وحقن وفحص وإصلاح نصوص وتفكيك شفرات XML لمستندات Microsoft Word بدعم كامل ودقيق للغة العربية والاتجاه من اليمين إلى اليسار (RTL)، مع نظام جراحة OpenXML وضبط BiDi، وفحص الصفحات الصوري (Pages/)، وبروتوكول نظافة مساحة العمل.**
 
 </div>
 
@@ -21,13 +21,14 @@
 
 - [العربية (Arabic)](#-العربية)
   - [المميزات الرئيسية](#-المميزات-الرئيسية)
-  - [فهرس الأدوات المتاحة (13 Tools)](#-فهرس-الأدوات-المتاحة-13-tools)
+  - [حل معضلة انحراف العناوين (BiDi OpenXML Surgery)](#-حل-معضلة-انحراف-العناوين-bidi-openxml-surgery)
+  - [المعاينة الصورية للصفحات ونظافة المجلد (Pages/)](#-المعاينة-الصورية-للصفحات-ونظافة-المجلد-pages)
+  - [فهرس الأدوات المتاحة (15 Tools)](#-فهرس-الأدوات-المتاحة-15-tools)
   - [طريقة التركيب والتشغيل عبر npx](#-طريقة-التركيب-والتشغيل-عبر-npx)
   - [إعدادات العميل (mcp_config.json)](#-إعدادات-العميل-mcp_configjson)
-  - [مواصفات Glama.json للمسرد](#-مواصفات-glamajson-للمسرد)
 - [English Section](#-english-version)
   - [Key Features](#key-features)
-  - [Tools Inventory](#tools-inventory)
+  - [Tools Inventory (15 Tools)](#tools-inventory)
   - [Installation & Setup](#installation--setup)
 
 ---
@@ -36,23 +37,41 @@
 
 ### 🚀 المميزات الرئيسية
 
-1. **دعم كامل للتيبوغرافيا وإصلاح النصوص العربية (RTL & Text Repair)**:
-   - اتجاه الكتابة من اليمين إلى اليسار (`bidi` / `rtl`) في الفقرات والجداول.
-   - إصلاح التيبوغرافيا التلقائي (`repair_arabic_text_formatting`): تصحيح الأقواس المقلوبة، توحيد الأرقام (شرقية/غربية)، إزالة الكشيدات الزائدة، وتصحيح همزات الألف والياء.
-   - دعم كافة الخطوط العربية الشائعة: `Amiri`, `Traditional Arabic`, `Cairo`, `Sakkal Majalla`, `Simplified Arabic`.
-2. **تفكيك وتعديل شفرات الـ XML المتقدم (`XML Decompression & Surgery`)**:
-   - تفكيك أرشيف `.docx` والتعديل الجراحي المباشر على أي ملف XML داخلي (`decompress_and_modify_word_xml`) مثل `word/document.xml`, `word/styles.xml`, `word/numbering.xml`.
-3. **إنشاء المستندات وإدارتها الشاملة**:
-   - إمكانية إنشاء كافة أنواع الكتابات والمستندات (خطابات رسمية، تقارير تنفيذية، عقود قانونية، قرارات إدارية، أدلة سياسات، أوراق بحثية، محاضر اجتماعات).
-4. **أتمتة ذكية دون الحاجة لأوامر نصية (`Zero Slash-Commands`)**:
-   - محرك تحليل المقاصد (`resolve_and_execute_document_intent`) يفهم طلباتك النصية العادية ويقوم بتوليد المستند المنسق مباشرة بخطوة واحدة.
+1. **جراحة OpenXML وإصلاح انحراف العناوين والنصوص (`BiDi OpenXML Surgery`)**:
+   - القضاء التام على انحراف العناوين نحو اليسار بفضل ضبط خصائص الفقرة `<w:jc w:val="right"/>` ومنع تضارب `<w:bidi/>`.
+   - منع انفصال العناوين المعلقة عن متونها في نهايات الصفحات (`w:keepNext`).
+   - حماية الآيات القرآنية والأحاديث الشريفة من الانشطار عبر فواصل الصفحات (`w:keepLines`).
+   - ضبط محاذاة المتون العربية بهوامش متطابقة (`w:bidi` + `w:jc="both"`).
+2. **نظام المعاينة الصورية للصفحات (`Pages/` Directory)**:
+   - تحويل المستند إلى PDF وتوليد صور عالية الدقة (150/300 DPI) لكل صفحة داخل مجلد فرعي نظيف ومستقل باسم **`Pages/`**.
+   - فحص وكشف العيوب البصرية (العناوين المعلقة، الفراغات الزائدة، توازن الأسطر).
+3. **بروتوكول نظافة مساحة العمل (Clean Workspace Protocol)**:
+   - عدم إنشاء أي ملفات بايثون أو سكربتات مبعثرة في مجلد المستخدم الأساسي، وحصر مخرجات العمل في المستند الأصلي وملف PDF ومجلد `Pages/`.
+4. **دعم كامل للتيبوغرافيا وإصلاح النصوص العربية**:
+   - تصحيح الأقواس المقلوبة، توحيد الأرقام (شرقية/غربية)، وتنسيق همزات الألف والياء.
+5. **أتمتة ذكية دون الحاجة لأوامر نصية (`Zero Slash-Commands`)**:
+   - محرك تحليل المقاصد (`resolve_and_execute_document_intent`) يفهم طلباتك النصية العادية ويقوم بتوليد وتصحيح المستند تلقائياً.
 
 ---
 
-### 🛠️ فهرس الأدوات المتاحة (13 Tools)
+### 🔬 حل معضلة انحراف العناوين (BiDi OpenXML Surgery)
+
+في بنية OpenXML، يؤدي وضع `<w:bidi/>` داخل خصائص الفقرة مع `<w:jc w:val="right"/>` إلى تفسيره كجهة يمنى منطقية لقارئ LTR، مما يجعله يعرض فيزيائياً في أقصى يسار الصفحة!
+
+**المعادلة المعتمدة في السيرفر**:
+- **العناوين**: `<w:jc w:val="right"/>` + `<w:keepNext/>` + `<w:widowControl/>` مع وسم `<w:rtl/>` في مسارات النصوص.
+- **متون الفقرات**: `<w:bidi/>` + `<w:jc w:val="both"/>` مع وسم `<w:rtl/>`.
+- **الآيات والأحاديث**: `<w:keepLines/>` + `<w:bidi/>` + تمييز لوني.
+- **المقاطع الإنجليزية**: `<w:jc w:val="left"/>` خالية تماماً من وسوم `bidi` و `rtl`.
+
+---
+
+### 🛠️ فهرس الأدوات المتاحة (15 Tools)
 
 | اسم الأداة | الوصف والتطبيق |
 |---|---|
+| `enforce_arabic_bidi_and_typography` | جراحة OpenXML وضبط محاذاة العناوين لليمين ومنع انشطار الآيات وحماية المتون وتوليد الترقيم. |
+| `audit_and_render_document_pages` | تحويل المستند لصور عالية الدقة داخل مجلد `Pages/` وفحص العيوب البصرية والهيكلية. |
 | `resolve_and_execute_document_intent` | إنشاء وتنسيق مستند وورد عربي كامل خطوة واحدة من خلال الوصف النصي العادي. |
 | `repair_arabic_text_formatting` | فحص وإصلاح عيوب التيبوغرافيا العربية للأقواس المقلوبة والأرقام والألف والياء والمسافات. |
 | `decompress_and_modify_word_xml` | تفكيك أرشيف docx والتعديل الجراحي بالـ Regex على أي ملف XML داخلي (document, styles, numbering). |
@@ -95,19 +114,15 @@ npx -y mcp-arabic-ms-word@latest
 
 ---
 
-### 📑 مواصفات Glama.json للمسرد
-
-المشروع متوافق 100% مع مسرد Glama MCP Registry ومزود بملف [glama.json](glama.json) لتأكيد أعلى درجات التقييم (High Score).
-
----
-
 ## 🇬🇧 English Version
 
 ### Key Features
 
+- **BiDi OpenXML Surgery Engine**: Deep OpenXML surgery preventing heading drift, orphan headings (`keepNext`), split verses (`keepLines`), and ensuring clean margin-to-margin body justification.
+- **Visual Page Audit & `Pages/` Workflow**: Automatically renders Word documents to high-resolution page images into an isolated `Pages/` directory with automated layout defect diagnostics.
+- **Clean Workspace Protocol**: Prevents file pollution by keeping all scratch files internal and delivering pristine `.docx`, `.pdf`, and `Pages/` artifacts.
 - **Arabic Text Repair Engine**: Automatic correction of inverted brackets in RTL text, digit standardization (Eastern/Western), whitespace trimming, and Alef/Yeh normalization.
-- **XML Decompression & Surgery**: Decompress `.docx` ZIP archives and perform surgical pattern replacements in `word/document.xml`, `word/styles.xml`, and `word/numbering.xml`.
-- **WordMasterAgent Integration**: Unified architecture orchestrating 13 specialized tools across 5 master skills.
+- **WordMasterAgent Architecture**: Orchestrates 15 specialized MCP tools across 6 master skills.
 
 ---
 

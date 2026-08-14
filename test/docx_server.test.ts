@@ -11,14 +11,20 @@ import { handleConvertToMarkdown } from '../src/tools/convert_to_markdown.js';
 import { handleResolveIntent } from '../src/tools/resolve_intent.js';
 import { handleRepairText } from '../src/tools/repair_text.js';
 import { handleDecompressXml } from '../src/tools/decompress_xml.js';
+import { handleEnforceArabicBidi } from '../src/tools/enforce_arabic_bidi.js';
+import { handleAuditAndRenderPages } from '../src/tools/audit_and_render_pages.js';
 
 describe('mcp-arabic-ms-word Server Integration Tests', () => {
   const testDocPath = path.join(process.cwd(), 'test_output_arabic.docx');
   const autoDocPath = path.join(process.cwd(), 'test_auto_letter.docx');
+  const testPagesDir = path.join(process.cwd(), 'Pages');
 
   after(() => {
     if (fs.existsSync(testDocPath)) fs.unlinkSync(testDocPath);
     if (fs.existsSync(autoDocPath)) fs.unlinkSync(autoDocPath);
+    const autoPdf = path.join(process.cwd(), 'test_auto_letter.pdf');
+    if (fs.existsSync(autoPdf)) fs.unlinkSync(autoPdf);
+    if (fs.existsSync(testPagesDir)) fs.rmSync(testPagesDir, { recursive: true, force: true });
   });
 
   it('should create a new Arabic document with RTL setup', async () => {
@@ -97,6 +103,38 @@ describe('mcp-arabic-ms-word Server Integration Tests', () => {
     assert.ok(res.data);
     assert.equal(res.data.archetype, 'official_letter');
     assert.equal(fs.existsSync(autoDocPath), true);
+  });
+
+  it('should enforce Arabic BiDi and OpenXML typography surgery without heading drift', async () => {
+    const res = await handleEnforceArabicBidi({
+      document_path: testDocPath,
+      fix_headings_alignment: true,
+      justify_body_paragraphs: true,
+      prevent_verse_splitting: true,
+      inject_dynamic_page_numbering: true,
+      isolate_english_sections: true,
+    });
+
+    assert.equal(res.status, 'success');
+    assert.ok(res.data);
+    assert.equal(res.data.headingsFixed >= 1, true);
+    assert.equal(res.data.pageNumbersInjected, true);
+  });
+
+  it('should audit and render document pages into dedicated Pages/ subfolder', async () => {
+    const res = await handleAuditAndRenderPages({
+      document_path: testDocPath,
+      output_folder_name: 'Pages',
+      dpi: 150,
+      detect_layout_defects: true,
+    });
+
+    assert.equal(res.status, 'success');
+    assert.ok(res.data);
+    assert.ok(res.data.pageCount >= 1);
+    assert.ok(res.data.renderedPages.length >= 1);
+    assert.equal(fs.existsSync(res.data.pagesDirectory), true);
+    assert.ok(res.data.diagnostics.layoutIntegrityScore > 80);
   });
 
   it('should repair Arabic text formatting and digits', async () => {

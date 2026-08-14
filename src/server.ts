@@ -23,6 +23,8 @@ import { convertToMarkdownSchema, handleConvertToMarkdown } from './tools/conver
 import { resolveIntentSchema, handleResolveIntent } from './tools/resolve_intent.js';
 import { repairTextSchema, handleRepairText } from './tools/repair_text.js';
 import { decompressXmlSchema, handleDecompressXml } from './tools/decompress_xml.js';
+import { enforceArabicBidiSchema, handleEnforceArabicBidi } from './tools/enforce_arabic_bidi.js';
+import { auditAndRenderPagesSchema, handleAuditAndRenderPages } from './tools/audit_and_render_pages.js';
 
 import { getResources } from './resources/index.js';
 import { getPrompts } from './prompts/index.js';
@@ -32,7 +34,7 @@ export function createWordMcpServer(): Server {
   const server = new Server(
     {
       name: 'mcp-arabic-ms-word',
-      version: '1.2.1',
+      version: '1.3.0',
     },
     {
       capabilities: {
@@ -643,6 +645,129 @@ export function createWordMcpServer(): Server {
         required: ['status', 'summary', 'data'],
       },
     },
+    {
+      name: 'enforce_arabic_bidi_and_typography',
+      title: 'Enforce Arabic BiDi & OpenXML Typography Surgery',
+      description:
+        'Performs deep OpenXML surgical repair on an Arabic Microsoft Word (.docx) document. Eliminates BiDi/RTL paragraph drift, enforces strict physical right alignment (w:jc=\'right\') and keepNext on all Arabic headings, justifies Arabic body text cleanly (w:bidi + w:jc=\'both\'), prevents Quranic verses and Hadiths from splitting across page breaks (keepLines), injects dynamic page numbers in footers, and cleanly isolates English sections without BiDi corruption. Mutating tool that updates the target document in-place. WHEN TO USE: Use when repairing misaligned Arabic headings, orphaned chapter titles, split Quranic verses, or inverted bracket alignment in existing .docx files. WHEN NOT TO USE: Do not use for simple text appending (use `add_paragraph_to_document`). ALTERNATIVES: `repair_arabic_text_formatting` for pure in-memory string repair; `decompress_and_modify_word_xml` for generic raw XML string replacement.',
+      annotations: {
+        readOnly: false,
+        destructive: true,
+        idempotent: false,
+        openWorld: false,
+      },
+      inputSchema: {
+        type: 'object',
+        properties: {
+          document_path: { type: 'string', description: 'The absolute or workspace path to the target .docx file.' },
+          fix_headings_alignment: { type: 'boolean', default: true, description: 'Enforce strict physical right alignment (w:jc=\'right\') and keepNext on headings.' },
+          justify_body_paragraphs: { type: 'boolean', default: true, description: 'Enforce w:bidi and w:jc=\'both\' on all Arabic body paragraphs.' },
+          prevent_verse_splitting: { type: 'boolean', default: true, description: 'Wrap Quranic verses and Hadiths with w:keepLines to prevent page break splitting.' },
+          inject_dynamic_page_numbering: { type: 'boolean', default: true, description: 'Inject dynamic Arabic page numbers into document footers.' },
+          isolate_english_sections: { type: 'boolean', default: true, description: 'Ensure English sections use strict left alignment without BiDi corruption.' },
+        },
+        required: ['document_path'],
+      },
+      outputSchema: {
+        type: 'object',
+        properties: {
+          status: { type: 'string', enum: ['success', 'partial', 'blocked', 'failed'] },
+          summary: { type: 'string' },
+          data: {
+            type: 'object',
+            properties: {
+              documentPath: { type: 'string' },
+              headingsFixed: { type: 'number' },
+              bodyParagraphsJustified: { type: 'number' },
+              versesProtected: { type: 'number' },
+              englishSectionsIsolated: { type: 'number' },
+              pageNumbersInjected: { type: 'boolean' },
+              totalParagraphsProcessed: { type: 'number' },
+            },
+            required: [
+              'documentPath',
+              'headingsFixed',
+              'bodyParagraphsJustified',
+              'versesProtected',
+              'englishSectionsIsolated',
+              'pageNumbersInjected',
+              'totalParagraphsProcessed',
+            ],
+          },
+        },
+        required: ['status', 'summary', 'data'],
+      },
+    },
+    {
+      name: 'audit_and_render_document_pages',
+      title: 'Audit Layout & Render Document Pages to Images (Pages/ Folder)',
+      description:
+        'Converts an Arabic Word document to PDF and renders all its pages as high-resolution PNG images inside a dedicated \'Pages/\' subfolder in the workspace. Automatically analyzes page count, line distribution, orphan headings, and blank gaps, returning structured diagnostic layout metrics and visual page artifacts. Mutating tool that generates rendered page images in the workspace. WHEN TO USE: Use when performing visual layout quality audits, checking for orphan headings, or verifying final multi-page document appearance. WHEN NOT TO USE: Do not use for pure text extraction (use `convert_word_to_markdown`). ALTERNATIVES: `inspect_word_document` for metadata-only inspection.',
+      annotations: {
+        readOnly: false,
+        destructive: false,
+        idempotent: true,
+        openWorld: false,
+      },
+      inputSchema: {
+        type: 'object',
+        properties: {
+          document_path: { type: 'string', description: 'Absolute or workspace path to the Word document (.docx).' },
+          output_folder_name: { type: 'string', default: 'Pages', description: 'Name of the subfolder inside the workspace to store rendered page images.' },
+          dpi: { type: 'integer', default: 150, description: 'Image rendering resolution in DPI (150 for audit, 300 for publication).' },
+          detect_layout_defects: { type: 'boolean', default: true, description: 'Inspect line counts and bounding boxes to flag orphan headings and layout defects.' },
+        },
+        required: ['document_path'],
+      },
+      outputSchema: {
+        type: 'object',
+        properties: {
+          status: { type: 'string', enum: ['success', 'partial', 'blocked', 'failed'] },
+          summary: { type: 'string' },
+          data: {
+            type: 'object',
+            properties: {
+              documentPath: { type: 'string' },
+              pdfPath: { type: 'string' },
+              pagesDirectory: { type: 'string' },
+              pageCount: { type: 'number' },
+              renderedPages: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    pageNumber: { type: 'number' },
+                    imagePath: { type: 'string' },
+                    uri: { type: 'string' },
+                    status: { type: 'string' },
+                  },
+                  required: ['pageNumber', 'imagePath', 'uri', 'status'],
+                },
+              },
+              diagnostics: {
+                type: 'object',
+                properties: {
+                  orphanHeadingsDetected: { type: 'number' },
+                  splitVersesDetected: { type: 'number' },
+                  trailingBlankLines: { type: 'number' },
+                  layoutIntegrityScore: { type: 'number' },
+                  recommendations: { type: 'array', items: { type: 'string' } },
+                },
+                required: [
+                  'orphanHeadingsDetected',
+                  'splitVersesDetected',
+                  'trailingBlankLines',
+                  'layoutIntegrityScore',
+                  'recommendations',
+                ],
+              },
+            },
+            required: ['documentPath', 'pagesDirectory', 'pageCount', 'renderedPages', 'diagnostics'],
+          },
+        },
+        required: ['status', 'summary', 'data'],
+      },
+    },
   ];
 
   // Tool Handlers
@@ -694,6 +819,12 @@ export function createWordMcpServer(): Server {
         break;
       case 'decompress_and_modify_word_xml':
         result = await handleDecompressXml(args as any);
+        break;
+      case 'enforce_arabic_bidi_and_typography':
+        result = await handleEnforceArabicBidi(args as any);
+        break;
+      case 'audit_and_render_document_pages':
+        result = await handleAuditAndRenderPages(args as any);
         break;
       default:
         throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);

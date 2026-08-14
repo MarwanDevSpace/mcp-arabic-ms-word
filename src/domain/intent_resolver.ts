@@ -1,5 +1,6 @@
 import { resolveWorkspacePath } from '../security/workspace.js';
 import { ArabicDocxBuilder } from './docx_builder.js';
+import { BidiOpenXmlSurgeon } from './bidi_openxml_surgeon.js';
 import { workspaceState } from '../state/workspace_state.js';
 import { Logger } from '../core/logger.js';
 
@@ -33,7 +34,7 @@ export async function resolveAndExecuteIntent(
     archetype = 'legal_contract';
   } else if (promptLower.includes('قرار') || promptLower.includes('تعميم') || promptLower.includes('decision')) {
     archetype = 'administrative_decision';
-  } else if (promptLower.includes('بحث') || promptLower.includes('ورقة') || promptLower.includes('paper')) {
+  } else if (promptLower.includes('بحث') || promptLower.includes('ورقة') || promptLower.includes('paper') || promptLower.includes('أكاديمي')) {
     archetype = 'academic_paper';
   } else if (promptLower.includes('دليل') || promptLower.includes('manual') || promptLower.includes('سياسة') || promptLower.includes('policy')) {
     archetype = 'policy_manual';
@@ -75,6 +76,22 @@ export async function resolveAndExecuteIntent(
     builder.addFooter('خطاب رسمي معتمد', true, true);
 
     elementsCreated.push('Header', 'Basmala Heading', 'Recipient & Salutation', 'Letter Body', 'Sign-off', 'Footer with Page Numbers');
+  } else if (archetype === 'academic_paper') {
+    builder.addHeading(request.subject || 'بحث علمي محكم', 1, { alignment: 'right', fontFamily: font, fontSizePt: 22, colorHex: '003366' });
+    builder.addParagraph(`الباحث: ${request.author || 'الباحث الأكاديمي'} | التاريخ: ${new Date().toLocaleDateString('ar-SA')}`, { colorHex: '555555', fontSizePt: 12, spaceAfterPt: 14 });
+
+    builder.addHeading('المقدمة وأهمية البحث', 2, { colorHex: '003366', fontSizePt: 16 });
+    builder.addParagraph(request.prompt, { alignment: 'justify', fontSizePt: 14, lineSpacingMultiplier: 1.25 });
+
+    builder.addHeading('المبحث الأول: الإطار النظري والدراسات السابقة', 2, { colorHex: '003366', fontSizePt: 16 });
+    builder.addParagraph('﴿ قُلْ هَلْ يَسْتَوِي الَّذِينَ يَعْلَمُونَ وَالَّذِينَ لَا يَعْلَمُونَ ﴾', { alignment: 'center', fontSizePt: 14, bold: true, colorHex: '004d40' });
+    builder.addParagraph('يتناول هذا المبحث المفاهيم التأسيسية والقواعد المنهجية التي بنيت عليها هذه الدراسة العلمية.', { alignment: 'justify', fontSizePt: 14, lineSpacingMultiplier: 1.25 });
+
+    builder.addHeading('الخاتمة وأبرز النتائج', 2, { colorHex: '003366', fontSizePt: 16 });
+    builder.addParagraph('• التوصل إلى نموذج تحليلي متكامل يحقق المعايير المستهدفة.\n• تقديم توصيات تطبيقية قابلة للتنفيذ في البيئات التشغيلية.', { alignment: 'right', fontSizePt: 13, lineSpacingMultiplier: 1.25 });
+
+    builder.addFooter('بحث أكاديمي محكم', true, true);
+    elementsCreated.push('Paper Title H1', 'Introduction H2', 'First Section H2 with Verse', 'Conclusion H2', 'Footer');
   } else if (archetype === 'executive_report' || archetype === 'policy_manual') {
     builder.addHeading(request.subject || (archetype === 'policy_manual' ? 'دليل السياسات والإجراءات' : 'تقرير إداري شامل'), 1, { alignment: 'right', fontFamily: font, fontSizePt: 22, colorHex: '1F4E78' });
     builder.addParagraph(`إعداد: ${request.author || 'فريق التطوير والتحليل'} | التاريخ: ${new Date().toLocaleDateString('ar-SA')}`, { colorHex: '555555', fontSizePt: 12, spaceAfterPt: 14 });
@@ -131,6 +148,21 @@ export async function resolveAndExecuteIntent(
 
   workspaceState.createDocumentHandle(resolvedPath, builder);
   await builder.saveToFile(resolvedPath);
+
+  // Apply automatic BiDi OpenXML surgical pass to guarantee 0 drift
+  try {
+    const surgeon = new BidiOpenXmlSurgeon();
+    await surgeon.enforceBidiAndTypography(resolvedPath, {
+      fixHeadingsAlignment: true,
+      justifyBodyParagraphs: true,
+      preventVerseSplitting: true,
+      injectDynamicPageNumbering: true,
+      isolateEnglishSections: true,
+    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    Logger.warn(`Bidi surgery post-pass warning: ${msg}`);
+  }
 
   return {
     outputPath: resolvedPath,
